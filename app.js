@@ -77,7 +77,6 @@ function overviewMarkup() {
       <div class="eyebrow"><span class="eyebrow-bar"></span> SELF-HOSTED AI INFRASTRUCTURE</div>
       <h1>Private infrastructure.<br/><span class="accent">Managed intelligence.</span></h1>
       <p class="lead">An on-premises inference platform that turns distributed GPU machines into centrally managed LLM services, accessible through controlled APIs.</p>
-      <div class="hero-actions"><a class="button primary" href="#/hardware">Explore the architecture <span aria-hidden="true">↗</span></a><a class="button ghost" href="#/context">Project context <span aria-hidden="true">→</span></a></div>
       <div class="meta-pills"><span>03 machines</span><span>Multi-GPU workers</span><span>Local model serving</span><span>Centralized management</span></div>
     </section>
     <section class="overview-block enter">
@@ -91,7 +90,7 @@ function overviewMarkup() {
     <section class="overview-block enter">
       <div class="section-head"><div><div class="eyebrow quiet">GUIDED EXPLORATION</div><h2>Explore the project layers.</h2></div><span class="section-index">${layers.length} AREAS</span></div>
       <div class="layer-grid">${layers.map(layer => `
-        <a class="layer-card" href="${href(layer.id)}"><div class="card-top"><span class="layer-number">${layer.label}</span><span class="card-arrow" aria-hidden="true">↗</span></div><span class="card-category">${layer.category}</span><h3>${htmlSafe(layer.title)}</h3><p>${htmlSafe(layer.tagline)}</p></a>
+        <article class="layer-card"><div class="card-top"><span class="layer-number">${layer.label}</span></div><span class="card-category">${layer.category}</span><h3>${htmlSafe(layer.title)}</h3><p>${htmlSafe(layer.tagline)}</p></article>
       `).join("")}</div>
     </section>
     <section class="overview-block enter last-block"><div class="section-head"><div><div class="eyebrow quiet">TWO COMMUNICATION PATHS</div><h2>Administration and inference stay distinct.</h2></div></div>
@@ -100,9 +99,7 @@ function overviewMarkup() {
   `;
 }
 
-function sectionMarkup(layer, index) {
-  const prev = index === 0 ? { id: "", title: "Overview" } : layers[index - 1];
-  const next = layers[index + 1];
+function sectionMarkup(layer) {
   return `
     <section class="detail-page enter">
       <div class="eyebrow"><span class="eyebrow-bar"></span> ${layer.category} <span class="small-separator">/</span> SECTION ${layer.label}</div>
@@ -112,7 +109,6 @@ function sectionMarkup(layer, index) {
       <div class="section-head compact"><div><div class="eyebrow quiet">CONTENT TO REFINE TOGETHER</div><h2>Talking points</h2></div></div>
       <div class="point-grid">${layer.focus.map((point, pointIndex) => `<div class="point"><span class="point-count">${String(pointIndex+1).padStart(2,"0")}</span><h3>${htmlSafe(point)}</h3><p>Reserved for the detailed diagram, evidence or explanation.</p></div>`).join("")}</div>
       <div class="holding-note"><span class="holding-icon" aria-hidden="true">◇</span><div><strong>${layer.id === "hardware" ? "Hardware references preserved" : "Section reserved for collaboration"}</strong><p>${layer.id === "hardware" ? "The three supplied machine photographs are stored in assets/hardware-reference but intentionally not displayed. Your initial motherboard and PCIe testing story is on hold until we design this section." : "We will replace the placeholders with project-specific architecture diagrams, verified results and concise explanations, one section at a time."}</p></div></div>
-      <div class="page-controls"><a class="text-link" href="${prev.id ? href(prev.id) : "#/"}">← ${htmlSafe(prev.title)}</a>${next ? `<a class="button primary small" href="${href(next.id)}">${htmlSafe(next.title)} →</a>` : `<a class="button primary small" href="#/">Back to overview ↗</a>`}</div>
     </section>
   `;
 }
@@ -128,26 +124,12 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? sectionMarkup(current, index) : overviewMarkup();
+  appElement.innerHTML = current ? sectionMarkup(current) : overviewMarkup();
   crumb.textContent = current ? current.title.toUpperCase() : "OVERVIEW";
   position.textContent = current ? `${current.label} / ${String(layers.length).padStart(2, "0")}` : "Overview";
   document.title = current ? `${current.title} · Securas Inference` : "Securas Inference · Architecture Walkthrough";
   window.scrollTo({top:0,behavior:"instant"});
 }
 
-function onKey(event) {
-  const activeTag = document.activeElement?.tagName;
-  if (["INPUT", "TEXTAREA", "SELECT"].includes(activeTag) || event.altKey || event.ctrlKey || event.metaKey) return;
-  if (event.key === "Escape") { window.location.hash = "#/"; return; }
-  if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-  event.preventDefault();
-  const current = getCurrentId();
-  const index = layers.findIndex(layer => layer.id === current);
-  if (event.key === "ArrowRight") window.location.hash = href(layers[Math.min(index+1,layers.length-1)].id);
-  else if (index <= 0) window.location.hash = "#/";
-  else window.location.hash = href(layers[index-1].id);
-}
-
 window.addEventListener("hashchange", render);
-window.addEventListener("keydown", onKey);
 render();
