@@ -25,8 +25,8 @@ Alternatively, opening `index.html` directly works in most browsers because the 
 ## Navigation
 
 - Overview presents the project context and architecture layers.
-- Select an item from the sidebar or click a layer card to open the section.
-- Use **Right/Left arrow keys** to move between sections and **Escape** for Overview.
+- Use the left sidebar for all section navigation (including Overview).
+- Overview cards are informational, not links. Pages have no previous/next buttons or keyboard page shortcuts.
 - Hash routes (`#/hardware`) work with static hosting such as GitHub Pages.
 
 ## Files
