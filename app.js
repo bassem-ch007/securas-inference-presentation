@@ -47,8 +47,8 @@ const layers = [
   },
   {
     id: "results", category: "DELIVERY", label: "10", title: "Benchmarks & outcomes", tagline: "Evidence, trade-offs, next steps",
-    summary: "TTFT, token generation speed, measured context limits, concurrency and engineering lessons from real hardware.",
-    focus: ["Benchmark protocol", "TTFT and tokens/s", "Hardware bottlenecks", "Engineering outcomes"], status: "outline"
+    summary: "Verified cluster achievements and an explicitly illustrative comparison of inference profiles.",
+    focus: ["Verified infrastructure inventory", "Synthetic benchmark comparison", "TTFT and output tokens per second", "Performance measurement caveats"], status: "complete"
   }
 ];
 
@@ -692,6 +692,139 @@ function masterMarkup() {
     </section>`;
 }
 
+
+/* ==============================================================
+   SECTION 10 — OUTCOMES AND ILLUSTRATIVE PERFORMANCE
+   Inventory values verified against documented stable snapshot.
+   Benchmark values intentionally synthetic, NOT measured.
+   ============================================================== */
+const resultsProfiles = [
+  {
+    kind: "Single-GPU profile",
+    name: "GPT-OSS 20B",
+    worker: "worker-lenovo",
+    deployment: "1 × RTX 3090 · TP 1 / PP 1",
+    profile: "gpt-oss-20b-lenovo-1gpu-balanced",
+    ttft: 1.1,
+    speed: 49,
+    memory: 20.8,
+    concurrency: 4,
+    context: "16,384",
+    className: "results-a"
+  },
+  {
+    kind: "Multi-GPU profile",
+    name: "Qwen3.8 27B FP8",
+    worker: "worker-aero",
+    deployment: "2 × RTX 3090 · TP 1 / PP 2",
+    profile: "qwen3.8-27b-fp8-aero-2gpu-balanced",
+    ttft: 2.9,
+    speed: 22,
+    memory: 22.1,
+    concurrency: 2,
+    context: "10,000",
+    className: "results-b"
+  }
+];
+
+function resultsBenchmarkCard(model) {
+  return `
+    <article class="results-model-card ${model.className}">
+      <div class="results-model-head">
+        <span class="results-model-tag">${model.kind}</span>
+        <span class="results-model-icon" aria-hidden="true">${model.className === "results-a" ? "01" : "02"}</span>
+      </div>
+      <h3>${model.name}</h3>
+      <p class="results-model-hardware">${model.worker} · ${model.deployment}</p>
+      <div class="results-model-stats">
+        <div><span>Time to first token</span><strong>${model.ttft.toFixed(1)} <small>s</small></strong></div>
+        <div><span>Generation throughput</span><strong>${model.speed} <small>tok/s</small></strong></div>
+        <div><span>Peak VRAM / GPU</span><strong>${model.memory.toFixed(1)} <small>GiB</small></strong></div>
+        <div><span>Concurrent requests</span><strong>${model.concurrency} <small>requests</small></strong></div>
+      </div>
+      <div class="results-model-foot"><span>Configured maximum context</span><strong>${model.context} tokens</strong></div>
+      <div class="results-model-profile">${model.profile}</div>
+    </article>`;
+}
+
+function resultsMarkup() {
+  return `
+  <section class="results-page enter" aria-labelledby="results-title">
+    <header class="results-hero">
+      <div class="eyebrow"><span class="eyebrow-bar"></span> DELIVERY / 10 — BENCHMARKS &amp; OUTCOMES</div>
+      <h1 id="results-title">From hardware to<br><span class="accent">managed AI services.</span></h1>
+      <p class="results-lead">What was delivered in Securas Inference — and how different inference profiles could behave under a representative workload.</p>
+      <div class="results-hero-line">
+        <span class="results-evidence"><span class="results-evidence-dot"></span> Verified platform inventory</span>
+        <span class="results-hero-separator" aria-hidden="true"></span>
+        <span class="results-demo-label">Performance figures are illustrative only</span>
+      </div>
+    </header>
+
+    <section class="results-section" aria-labelledby="results-achievements-title">
+      <div class="results-section-header">
+        <div><span class="results-section-number">01 / DELIVERED INFRASTRUCTURE</span><h2 id="results-achievements-title">The platform at a glance.</h2></div>
+        <p>Actual inventory from the stable Securas repository, not simulated benchmark output.</p>
+      </div>
+      <div class="results-kpi-grid">
+        <article class="results-kpi"><span class="results-kpi-index">01 / INFRASTRUCTURE</span><div class="results-kpi-number">03</div><h3>Physical nodes</h3><p>1 master + 2 GPU inference workers</p></article>
+        <article class="results-kpi"><span class="results-kpi-index">02 / COMPUTE</span><div class="results-kpi-number">05</div><h3>RTX 3090 GPUs</h3><p>120 GiB aggregate physical VRAM</p></article>
+        <article class="results-kpi"><span class="results-kpi-index">03 / MODEL CATALOG</span><div class="results-kpi-number">04</div><h3>Cataloged models</h3><p>GPT-OSS and Qwen model families</p></article>
+        <article class="results-kpi"><span class="results-kpi-index">04 / DEPLOYMENT</span><div class="results-kpi-number">13</div><h3>Defined profiles</h3><p>Alternative GPU, context and batch configurations</p></article>
+      </div>
+      <p class="results-inventory-note">The 120 GiB total is the sum of five 24 GiB RTX 3090 GPUs, not a single shared memory pool. The master also has a separate RTX 3070 reserved for auxiliary use.</p>
+    </section>
+
+    <section class="results-section" aria-labelledby="results-bench-title">
+      <div class="results-section-header">
+        <div><span class="results-section-number">02 / PERFORMANCE COMPARISON</span><h2 id="results-bench-title">Different profiles. Different trade-offs.</h2></div>
+        <p>Illustrative values to demonstrate how a benchmark comparison would be presented.</p>
+      </div>
+      <div class="results-disclosure" role="note" aria-label="Synthetic benchmark disclosure">
+        <div class="results-disclosure-mark" aria-hidden="true">!</div>
+        <div><strong>SYNTHETIC EXAMPLE — NOT MEASURED</strong><p>The figures below are plausible placeholders chosen for presentation design. They were <strong>not</strong> collected from the Securas hardware and must not be presented as test results.</p></div>
+      </div>
+      <div class="results-protocol">
+        <div><strong>Illustrative test setup</strong><p>Warm model · 512 input tokens · 128 output tokens · one active request for latency and generation speed. Concurrency figures represent a separate hypothetical load scenario.</p></div>
+        <div><strong>Profiles from real inventory</strong><p>The worker placement, GPU count, parallelism and configured context limits match the documented profiles. The timing, speed, utilization and concurrency figures are synthetic.</p></div>
+      </div>
+      <div class="results-model-grid">
+        ${resultsProfiles.map(resultsBenchmarkCard).join("")}
+      </div>
+
+      <div class="results-compare-grid">
+        <article class="results-comparison">
+          <div class="results-chart-heading"><div><span class="results-chart-index">METRIC A</span><h3>Time to first token</h3><p>Lower is better · seconds</p></div><span class="results-chart-icon">↓</span></div>
+          <div class="results-bars">
+            ${resultsProfiles.map(model => `
+              <div class="results-bar-item ${model.className}">
+                <div class="results-bar-caption"><span>${model.name}</span><strong>${model.ttft.toFixed(1)} s</strong></div>
+                <div class="results-bar-track"><div class="results-bar-fill" style="width:${(model.ttft / 3.2 * 100).toFixed(1)}%"></div></div>
+              </div>`).join("")}
+          </div>
+        </article>
+        <article class="results-comparison">
+          <div class="results-chart-heading"><div><span class="results-chart-index">METRIC B</span><h3>Generation throughput</h3><p>Higher is better · output tokens / second</p></div><span class="results-chart-icon">↑</span></div>
+          <div class="results-bars">
+            ${resultsProfiles.map(model => `
+              <div class="results-bar-item ${model.className}">
+                <div class="results-bar-caption"><span>${model.name}</span><strong>${model.speed} tok/s</strong></div>
+                <div class="results-bar-track"><div class="results-bar-fill" style="width:${(model.speed / 55 * 100).toFixed(1)}%"></div></div>
+              </div>`).join("")}
+          </div>
+        </article>
+      </div>
+      <p class="results-interpretation"><strong>How to interpret:</strong> GPT-OSS 20B and Qwen3.8 27B FP8 are different models on different GPU configurations, so this is a profile illustration — <em>not</em> a controlled model-speed ranking. Actual figures require repeated measurements on the physical cluster.</p>
+    </section>
+
+    <footer class="results-finish">
+      <span class="results-section-number">PROJECT OUTCOME</span>
+      <h2>Private inference is now an <span>operable platform.</span></h2>
+      <p>Distributed GPU machines are managed through one control plane, reusable model profiles and a controlled client API. Benchmark measurements remain a separate validation task.</p>
+    </footer>
+  </section>`;
+}
+
 function sectionMarkup(layer) {
   return `
     <section class="detail-page enter">
@@ -738,7 +871,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : current.id === "results" ? resultsMarkup() : sectionMarkup(current)) : overviewMarkup();
   if (current?.id === "ansible") bindAnsibleOperations();
   if (current?.id === "hardware") {
     for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {

@@ -114,3 +114,18 @@ This section explains the worker-acer control node with a guided, reading-first 
 - A direct continuation to `#/ansible` for the playbook lifecycle.
 
 The page is static and uses no live API. Its architecture and service claims are based on the Securas Inference system architecture, control API, database, status-collector, LiteLLM, and Tailscale documentation.
+
+## Benchmarks & outcomes page (Section 10)
+
+Open `http://localhost:8000/#/results`.
+
+This completed page contains two selected sections:
+
+1. **Verified platform achievements** from `securas-inference/docs/reference/current-production-inventory.md`: 3 nodes (1 master + 2 inference workers), 5 RTX 3090 GPUs (120 GiB aggregate physical VRAM), 4 cataloged models and 13 runtime profiles. The master also has an auxiliary RTX 3070, not counted in the 5 inference GPUs.
+2. **Illustrative benchmark comparison**, using two real profile configurations:
+   - `gpt-oss-20b-lenovo-1gpu-balanced`: 1 RTX 3090, TP 1 / PP 1, configured context 16,384 tokens;
+   - `qwen3.8-27b-fp8-aero-2gpu-balanced`: 2 RTX 3090, TP 1 / PP 2, configured context 10,000 tokens.
+
+**All performance numbers are synthetic placeholders; no measured hardware benchmark is claimed.** The example TTFT, output tokens/s, VRAM consumption and concurrency are fabricated for presentation layout. The displayed test conditions are hypothetical, and configured context limits are **not** measured maximum tested contexts. Replace values with repeatable measurements before using them as benchmark evidence. The page explicitly labels simulated values.
+
+There are no dependencies or API requests; this is a static web presentation.
