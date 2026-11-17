@@ -38,29 +38,20 @@ Alternatively, opening `index.html` directly works in most browsers because the 
 
 ## GitHub repository
 
-Expected remote:
+Repository: https://github.com/bassem-ch007/securas-inference-presentation
 
-`git@github.com:bassem-ch007/securas-inference-presentation.git`
-
-The repo was **not found** during initial setup. The local Git remote may be configured, but publishing requires the GitHub repository to exist and your local SSH key to have access.
-
-Once created on GitHub, from this folder:
+The connected GitHub integration can update this repository. From your existing local clone, retrieve the latest edits:
 
 ```bash
-git add .
-git commit -m "Initial static architecture walkthrough"
-git push -u origin main
+git pull origin main
 ```
 
-If working with the ZIP rather than the preinitialized working folder, initialize it first:
-
-```bash
-git init -b main
-git remote add origin git@github.com:bassem-ch007/securas-inference-presentation.git
-```
-
-Do not commit credentials, tokens, `.env` secrets, or private deployment configs.
+For local changes, commit and push them from your machine. Do not commit credentials, tokens, `.env` secrets, or private deployment configs.
 
 ## Editing the content
 
 Update the `layers` array near the top of `app.js`: title, summary, focus topics and order. The Overview and placeholder detail sections derive from this data. Hardware content and reference images remain on hold until reviewed together.
+
+## Visual design (V0.2)
+
+White background, green/blue accents, larger readable typography and spacious layouts. No dependencies or build step. Hardware section remains a placeholder until reviewed.
