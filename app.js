@@ -331,6 +331,16 @@ function render() {
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
   appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : sectionMarkup(current)) : overviewMarkup();
+  if (current?.id === "hardware") {
+    for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {
+      const showFallback = () => {
+        img.classList.add("hw-image-unavailable");
+        img.parentElement.classList.add("hw-missing-photo");
+      };
+      img.addEventListener("error", showFallback, { once: true });
+      if (img.complete && img.naturalWidth === 0) showFallback();
+    }
+  }
   crumb.textContent = current ? current.title.toUpperCase() : "OVERVIEW";
   position.textContent = current ? `${current.label} / ${String(layers.length).padStart(2, "0")}` : "Overview";
   document.title = current ? `${current.title} · Securas Inference` : "Securas Inference · Architecture Walkthrough";
