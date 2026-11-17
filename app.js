@@ -33,7 +33,7 @@ const layers = [
   {
     id: "ansible", category: "CONTROL", label: "07", title: "Ansible operations", tagline: "From an admin action to a running service",
     summary: "A simple operations tree covering model install/adopt, profile check/up/down, locks and execution results.",
-    focus: ["Main playbooks", "Model completion markers", "Operation locking", "Deploy / stop workflow"], status: "outline"
+    focus: ["Main playbooks", "Model completion markers", "Operation locking", "Deploy / stop workflow"], status: "complete"
   },
   {
     id: "dashboard", category: "CONTROL", label: "08", title: "Admin dashboard", tagline: "One interface for the platform",
@@ -335,6 +335,252 @@ function hardwareMarkup() {
   `;
 }
 
+
+/* ==============================================================
+   SECTION 07 — ANSIBLE / OPERATIONS EXPLORER
+   Project-specific workflows from securas-inference/ansible and
+   docs/05..08. All walkthroughs are illustrative; not executable.
+   ============================================================== */
+
+const ansibleOpCatalog = [
+  {
+    id: "model_install", label: "Install", prefix: "MODEL 01", playbook: "model-install.yml",
+    category: "model", mode: "Dashboard + durable operation", symbol: "↓",
+    short: "Download a pinned Hugging Face revision to a selected worker and verify it.",
+    outcome: "Verified model artifact available at /srv/models/<model-name>.",
+    steps: [
+      ["Select a missing artifact", "From Models, choose an enabled catalog entry and a reachable worker reporting the artifact as missing.", "Admin UI"],
+      ["Create a durable operation", "FastAPI records model_install in PostgreSQL. A restricted launcher starts an isolated systemd operation runner.", "Control plane"],
+      ["Resolve the target", "The runner obtains the relevant locks; securasctl resolves the model and worker, and Ansible reads its dynamic inventory.", "Execution engine"],
+      ["Stage and verify the model", "model-install.yml downloads the exact pinned revision and validates the model files before writing its completion marker.", "Ansible · worker"],
+      ["Report the result", "The runner records success or failure and logs; the status collector can then report the worker artifact as installed.", "Operations history"]
+    ]
+  },
+  {
+    id: "model_copy", label: "Copy", prefix: "MODEL 02", playbook: "model-copy.yml",
+    category: "model", mode: "Dashboard + durable operation", symbol: "⇢",
+    short: "Reuse a verified model already on another worker without downloading again.",
+    outcome: "Target worker receives an independently verifiable model artifact.",
+    steps: [
+      ["Pick source and target", "Select a reachable worker with a verified model and a target worker that reports it missing.", "Admin UI"],
+      ["Queue and lock", "FastAPI creates model_copy. The operation runner locks the model/worker resources to prevent conflicting changes.", "Control plane"],
+      ["Resolve a safe transfer", "The model-copy wrapper validates both hosts, resolves database configuration and supplies protected variables to Ansible.", "Execution engine"],
+      ["Transfer and verify", "model-copy.yml copies the source artifact, checks its identity, and cleans temporary staging on completion.", "Ansible · workers"],
+      ["Record the outcome", "Operation history retains the final status, exit code and output for review.", "Operations history"]
+    ]
+  },
+  {
+    id: "model_adopt", label: "Adopt", prefix: "MODEL 03", playbook: "model-adopt.yml",
+    category: "model", mode: "Administrative CLI · not a dashboard operation", symbol: "✓",
+    short: "Bring an existing local model directory under Securas verification and tracking.",
+    outcome: "Previously present artifact becomes a managed, verifiable artifact.",
+    steps: [
+      ["Identify the existing files", "The administrator identifies a model already present on a worker and an explicit model revision.", "Admin CLI"],
+      ["Run the supported wrapper", "Use securasctl model adopt MODEL HOST REVISION, not an arbitrary command from the dashboard.", "Administrative shell"],
+      ["Inspect the artifact", "model-adopt.yml uses the model verification and adoption path without treating adoption as an update or re-download.", "Ansible · worker"],
+      ["Create a valid marker", "Only after checks, the model identity, source repository and revision are recorded in .securas-model.json.", "Ansible · worker"],
+      ["Discover the managed state", "The status collector can now distinguish the verified installed artifact from an unverified directory.", "Inventory"]
+    ]
+  },
+  {
+    id: "profile_check", label: "Check", prefix: "PROFILE 01", playbook: "profile-check.yml",
+    category: "profile", mode: "Dashboard + durable operation", symbol: "◇",
+    short: "Preflight the worker, artifact, GPUs and runtime without starting inference.",
+    outcome: "Preflight result and logs — no vLLM deployment or LiteLLM route.",
+    steps: [
+      ["Choose a profile", "The administrator selects a configured model, worker, GPU placement and runtime settings, then clicks Check.", "Admin UI"],
+      ["Resolve desired state", "The control service creates profile_check and resolves profile configuration from PostgreSQL.", "Control plane"],
+      ["Lock the required resources", "The runner acquires non-blocking resource locks and invokes the supported profile wrapper.", "Execution engine"],
+      ["Run preflight checks", "profile-check.yml validates the model artifact, available GPUs, host/port and serving configuration.", "Ansible · worker"],
+      ["Show the validation result", "Execution logs and success/failure are retained. Check does not expose a gateway model route.", "Operations history"]
+    ]
+  },
+  {
+    id: "profile_up", label: "Up", prefix: "PROFILE 02", playbook: "profile-up.yml",
+    category: "profile", mode: "Dashboard + durable operation", symbol: "▶",
+    short: "Start the selected vLLM runtime, validate health, then publish its LiteLLM route.",
+    outcome: "Healthy local vLLM runtime registered under the exact profile name.",
+    steps: [
+      ["Request Profile Up", "The administrator chooses a configured Qwen profile on worker-aero and clicks Up.", "Admin UI"],
+      ["Create and isolate the operation", "FastAPI creates profile_up in PostgreSQL; a restricted sudo launcher starts a transient systemd runner.", "Control plane"],
+      ["Lock and preflight", "The runner locks the target resources and Ansible validates the worker, installed model and GPU configuration.", "Operation runner"],
+      ["Start and verify vLLM", "profile-up.yml renders the profile's Docker Compose configuration, starts the container and waits for a healthy backend.", "Ansible · worker-aero"],
+      ["Register the gateway route", "After vLLM passes health validation, securasctl registers the exact profile name with LiteLLM.", "LiteLLM gateway"],
+      ["Persist execution results", "The runner saves the exit code, result and output; the dashboard displays the operation and running profile.", "PostgreSQL + UI"]
+    ]
+  },
+  {
+    id: "profile_down", label: "Down", prefix: "PROFILE 03", playbook: "profile-down.yml",
+    category: "profile", mode: "Dashboard + durable operation", symbol: "■",
+    short: "Unpublish the LiteLLM route before shutting down its inference backend.",
+    outcome: "Profile route removed and the vLLM runtime stopped; allocated GPUs become free.",
+    steps: [
+      ["Request Profile Down", "The administrator selects a running profile and clicks Down; FastAPI records profile_down.", "Admin UI"],
+      ["Reserve the operation", "The runner acquires the relevant resource locks to prevent conflicting lifecycle changes.", "Operation runner"],
+      ["Remove the gateway route first", "securasctl unregisters the profile from LiteLLM before any backend shutdown.", "LiteLLM gateway"],
+      ["Stop the worker runtime", "Only after gateway removal succeeds, profile-down.yml stops the selected Docker Compose runtime.", "Ansible · worker"],
+      ["Retain the operation result", "Final status and logs remain in PostgreSQL; the dashboard reflects the stopped runtime.", "Operations history"]
+    ]
+  }
+];
+
+let ansibleSelectedOperation = "profile_up";
+let ansibleSelectedStep = 0;
+
+function ansibleOperationCard(item) {
+  const active = item.id === ansibleSelectedOperation;
+  return `
+    <button type="button" class="ans-op-card ${active ? "is-active" : ""}"
+      data-ans-op="${item.id}" aria-pressed="${active ? "true" : "false"}"
+      aria-label="Explore ${item.label} operation">
+      <span class="ans-card-top"><span class="ans-op-number">${item.prefix}</span><span class="ans-op-symbol" aria-hidden="true">${item.symbol}</span></span>
+      <strong>${item.label}<span class="ans-code">${item.playbook}</span></strong>
+      <span class="ans-op-description">${item.short}</span>
+      <span class="ans-op-mode">${item.id === "model_adopt" ? "CLI ONLY" : "AUDITED OPERATION"} <span aria-hidden="true">→</span></span>
+    </button>`;
+}
+
+function ansibleScenarioMarkup() {
+  const op = ansibleOpCatalog.find(item => item.id === ansibleSelectedOperation) || ansibleOpCatalog[4];
+  const index = Math.min(ansibleSelectedStep, op.steps.length - 1);
+  const step = op.steps[index];
+  return `
+    <div class="ans-scenario-head">
+      <div>
+        <div class="ans-overline">INTERACTIVE EXPLAINER / ${op.prefix}</div>
+        <h3>${op.label}: <span>${op.playbook}</span></h3>
+        <p>${op.short}</p>
+      </div>
+      <span class="ans-operation-kind">${op.mode}</span>
+    </div>
+    <div class="ans-stage-main" role="group" aria-label="Operation walkthrough">
+      <div class="ans-steps-track" aria-label="Workflow progress">
+        ${op.steps.map((stage, i) => `
+          <button type="button" class="ans-step-pill ${i === index ? "current" : i < index ? "completed" : ""}"
+            data-ans-step="${i}" aria-label="Jump to step ${i + 1}: ${stage[0]}" aria-current="${i === index ? "step" : "false"}">
+            ${String(i + 1).padStart(2, "0")}
+          </button>`).join('<span class="ans-step-connector" aria-hidden="true"></span>')}
+      </div>
+      <div class="ans-stage-card" aria-live="polite" aria-atomic="true">
+        <div class="ans-stage-top"><span class="ans-stage-number">STEP ${String(index + 1).padStart(2, "0")} / ${String(op.steps.length).padStart(2, "0")}</span><span class="ans-stage-location">${step[2]}</span></div>
+        <h4>${step[0]}</h4>
+        <p>${step[1]}</p>
+      </div>
+    </div>
+    <div class="ans-stage-controls">
+      <button class="ans-button ans-button-outline" data-ans-move="prev" ${index === 0 ? "disabled" : ""} type="button">← Previous</button>
+      <span class="ans-stage-outcome"><strong>Outcome:</strong> ${op.outcome.replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</span>
+      <button class="ans-button ans-button-primary" data-ans-move="next" type="button">${index === op.steps.length - 1 ? "Replay ↻" : "Next step →"}</button>
+    </div>
+  `;
+}
+
+function ansibleMarkup() {
+  ansibleSelectedOperation = "profile_up";
+  ansibleSelectedStep = 0;
+  return `
+  <section class="ans-page enter" aria-labelledby="ans-title">
+    <header class="ans-hero">
+      <div class="eyebrow"><span class="eyebrow-bar"></span> CONTROL / 07 — AUTOMATION LAYER</div>
+      <div class="ans-hero-grid">
+        <div>
+          <h1 id="ans-title">One action.<br><span class="accent">Repeatable execution.</span></h1>
+          <p class="ans-hero-lead">Ansible turns database-defined models and profiles into real GPU services. Administrators operate the cluster from one control plane instead of manually configuring each worker over SSH.</p>
+          <div class="ans-hero-meta"><span>6 playbooks</span><span>5 durable UI operations</span><span>2 GPU workers</span></div>
+        </div>
+        <div class="ans-hero-aside">
+          <div class="ans-mini-overline">THE OPERATING PRINCIPLE</div>
+          <div class="ans-mini-action">Desired state <span>→</span></div>
+          <div class="ans-mini-action">Validated execution <span>→</span></div>
+          <div class="ans-mini-action">Observed runtime <span>✓</span></div>
+          <p>Configuration originates in PostgreSQL; the runner and Ansible reconcile it with each worker.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="ans-section" aria-labelledby="ans-architecture">
+      <div class="ans-section-heading"><div><span class="ans-overline">01 / EXECUTION ARCHITECTURE</span><h2 id="ans-architecture">From request to GPU runtime.</h2></div><p>An authorized UI request is never an arbitrary shell command on a worker.</p></div>
+      <div class="ans-route" role="list" aria-label="Operation execution pipeline">
+        <div class="ans-route-node" role="listitem"><span class="ans-route-ordinal">01 / REQUEST</span><span class="ans-route-icon" aria-hidden="true">▦</span><strong>Admin UI</strong><small>Check · Up · Down<br>Install · Copy</small></div>
+        <div class="ans-route-arrow" aria-hidden="true">→</div>
+        <div class="ans-route-node" role="listitem"><span class="ans-route-ordinal">02 / VALIDATE</span><span class="ans-route-icon" aria-hidden="true">{ }</span><strong>FastAPI + DB</strong><small>Authorization, desired state & operation record</small></div>
+        <div class="ans-route-arrow" aria-hidden="true">→</div>
+        <div class="ans-route-node" role="listitem"><span class="ans-route-ordinal">03 / ISOLATE</span><span class="ans-route-icon" aria-hidden="true">⌘</span><strong>systemd runner</strong><small>Restricted launcher, resource locks & logs</small></div>
+        <div class="ans-route-arrow" aria-hidden="true">→</div>
+        <div class="ans-route-node ans-route-highlight" role="listitem"><span class="ans-route-ordinal">04 / AUTOMATE</span><span class="ans-route-icon" aria-hidden="true">A</span><strong>Ansible</strong><small>Dynamic inventory, verified roles & playbooks</small></div>
+        <div class="ans-route-arrow" aria-hidden="true">→</div>
+        <div class="ans-route-node" role="listitem"><span class="ans-route-ordinal">05 / SERVE</span><span class="ans-route-icon" aria-hidden="true">▣</span><strong>GPU workers</strong><small>Docker Compose, vLLM & model artifacts</small></div>
+      </div>
+      <div class="ans-route-foot"><span class="ans-route-dot"></span><p><strong>Gateway coordination:</strong> the <code>securasctl</code> wrapper registers the LiteLLM route <strong>after</strong> healthy Profile Up, and unregisters it <strong>before</strong> Profile Down. PostgreSQL retains operation status and history.</p></div>
+    </section>
+
+    <section class="ans-section" aria-labelledby="ans-operations">
+      <div class="ans-section-heading"><div><span class="ans-overline">02 / IMPLEMENTED PLAYBOOKS</span><h2 id="ans-operations">Six operations. Two lifecycles.</h2></div><p>Select any operation to explore its actual sequence below.</p></div>
+      <div class="ans-operation-groups">
+        <div class="ans-op-group">
+          <div class="ans-op-heading"><div><span class="ans-op-group-icon">01</span><h3>Model lifecycle</h3></div><span>MODEL ARTIFACTS</span></div>
+          <div class="ans-op-grid">${ansibleOpCatalog.filter(op => op.category === "model").map(ansibleOperationCard).join("")}</div>
+        </div>
+        <div class="ans-op-group">
+          <div class="ans-op-heading"><div><span class="ans-op-group-icon ans-profile-ordinal">02</span><h3>Profile lifecycle</h3></div><span>INFERENCE SERVICES</span></div>
+          <div class="ans-op-grid">${ansibleOpCatalog.filter(op => op.category === "profile").map(ansibleOperationCard).join("")}</div>
+        </div>
+      </div>
+      <div class="ans-cli-note"><strong>Important distinction:</strong> Install, Copy, Check, Up and Down are durable operations available through the dashboard. <strong>Model Adopt</strong> is implemented as an administrator CLI + Ansible playbook, not as a dashboard operation.</div>
+    </section>
+
+    <section class="ans-section ans-interactive-section" aria-labelledby="ans-example">
+      <div class="ans-section-heading"><div><span class="ans-overline">03 / OPERATION WALKTHROUGH</span><h2 id="ans-example">Follow the execution, step by step.</h2></div><p>Illustrative process based on the implemented Securas playbooks.</p></div>
+      <div class="ans-scenario" id="ans-scenario">${ansibleScenarioMarkup()}</div>
+    </section>
+
+    <section class="ans-section" aria-labelledby="ans-protections">
+      <div class="ans-section-heading"><div><span class="ans-overline">04 / ENGINEERING SAFEGUARDS</span><h2 id="ans-protections">Predictable operations, controlled risk.</h2></div><p>Controls built around constrained GPU resources and durable administration.</p></div>
+      <div class="ans-safeguards">
+        <article class="ans-safeguard"><span class="ans-safe-symbol">01</span><h3>Preflight before start</h3><p>Checks worker reachability, artifact identity, GPU placement and runtime prerequisites before deploying a profile.</p></article>
+        <article class="ans-safeguard"><span class="ans-safe-symbol">02</span><h3>Resource locking</h3><p>Non-blocking locks in <code>/run/securas-inference/locks</code> prevent conflicting changes while allowing independent operations.</p></article>
+        <article class="ans-safeguard"><span class="ans-safe-symbol">03</span><h3>Restricted execution</h3><p>FastAPI dispatches an operation ID through a narrow launcher; the runner resolves known commands from database records.</p></article>
+        <article class="ans-safeguard"><span class="ans-safe-symbol">04</span><h3>Safe gateway ordering</h3><p>Up registers only after backend health. Down removes the route first; if that fails, the backend is kept running.</p></article>
+      </div>
+      <div class="ans-failure-note"><strong>Failure behavior matters:</strong> if the LiteLLM registration step fails during Up, Securas reports failure but leaves an already healthy vLLM backend running for repair and retry. It does not silently roll back that container.</div>
+    </section>
+
+    <section class="ans-final" aria-labelledby="ans-result">
+      <div><span class="ans-overline">05 / SEE THE RESULT</span><h2 id="ans-result">Architecture in theory. Operations in the dashboard.</h2><p>Open the locally mocked Securas Control UI, switch to Operations, and inspect a profile lifecycle, its execution log and history.</p></div>
+      <a class="ans-button ans-button-primary ans-final-link" href="./dashboard/#operations">Explore Operations Dashboard <span aria-hidden="true">↗</span></a>
+    </section>
+  </section>`;
+}
+
+function bindAnsibleOperations() {
+  const root = appElement.querySelector(".ans-page");
+  if (!root) return;
+  root.addEventListener("click", event => {
+    const opButton = event.target.closest("[data-ans-op]");
+    const stepButton = event.target.closest("[data-ans-step]");
+    const navButton = event.target.closest("[data-ans-move]");
+    if (opButton) {
+      ansibleSelectedOperation = opButton.dataset.ansOp;
+      ansibleSelectedStep = 0;
+      root.querySelectorAll("[data-ans-op]").forEach(button => {
+        const active = button.dataset.ansOp === ansibleSelectedOperation;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+    } else if (stepButton) {
+      ansibleSelectedStep = Number(stepButton.dataset.ansStep);
+    } else if (navButton) {
+      const op = ansibleOpCatalog.find(item => item.id === ansibleSelectedOperation);
+      ansibleSelectedStep = navButton.dataset.ansMove === "prev"
+        ? Math.max(0, ansibleSelectedStep - 1)
+        : (ansibleSelectedStep + 1) % op.steps.length;
+    } else {
+      return;
+    }
+    root.querySelector("#ans-scenario").innerHTML = ansibleScenarioMarkup();
+  });
+}
+
 function sectionMarkup(layer) {
   return `
     <section class="detail-page enter">
@@ -381,7 +627,8 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "dashboard" ? dashboardMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : sectionMarkup(current)) : overviewMarkup();
+  if (current?.id === "ansible") bindAnsibleOperations();
   if (current?.id === "hardware") {
     for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {
       const showFallback = () => {

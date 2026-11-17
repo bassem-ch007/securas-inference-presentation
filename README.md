@@ -84,3 +84,19 @@ The hardware page uses the original motherboard, prototype, PSU jumper, and PSU 
 Below the PCIe bandwidth experiment, the page now explains **Pipeline Parallelism (PP)** versus **Tensor Parallelism (TP)** with side-by-side two-GPU conceptual diagrams and the implications of PCIe x1 risers.
 
 To install the four historical photos, extract the image archive into the repository root (preserving paths), then commit and push the `assets/hardware` folder. This is required once because this connector cannot directly transfer the uploaded binary files into GitHub.
+
+## Ansible operations page (Section 07)
+
+Open `http://localhost:8000/#/ansible` using the same static Python server.
+
+This presentation section is implemented (no build process, dependencies or production API access):
+
+- An execution pipeline: Admin UI → FastAPI + PostgreSQL → restricted systemd runner with locks → Ansible → GPU workers. LiteLLM gateway ordering is explained separately.
+- Six selectable playbook cards: model install, copy, adopt, profile check, up and down.
+- An interactive, step-by-step walkthrough for **each** operation, with previous/next, progress indicators and direct step navigation.
+- Safeguards explaining preflight validation, deterministic resource locking, the privilege boundary and gateway-safe ordering, including recovery behavior on LiteLLM registration failure.
+- A direct link to the standalone mocked Operations dashboard at `/dashboard/#operations`.
+
+The five durable dashboard operations are distinct from **model adopt**, which is available through the administrative CLI, not through the web UI. All walkthroughs are explanatory and do not execute any real operations.
+
+Source of operational truth: `bassem-ch007/securas-inference`, especially `docs/05-model-lifecycle.md`, `docs/06-profile-lifecycle.md`, `docs/07-operation-engine-and-privilege-boundary.md`, and `docs/08-ansible-automation.md`.
