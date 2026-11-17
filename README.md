@@ -60,7 +60,7 @@ White background, green/blue accents, larger readable typography and spacious la
 
 The three final machine photos already live at `assets/hardware-reference/` and are included in normal pulls.
 
-The four newly supplied historical experiment photos have been organized into a separate image bundle, because the connected GitHub integration can edit source files but does not accept local binary photo uploads. Extract `securas-hardware-images-bundle.zip` from the accompanying ChatGPT response directly into the project root, so these exact files exist:
+The four newly supplied historical experiment photos have been organized into a separate image bundle, because the connected GitHub integration can edit source files but does not accept local binary photo uploads. Extract `securas-hardware-photos-ready-to-commit.zip` from the accompanying ChatGPT response directly into the project root, so these exact files exist:
 
 - `assets/hardware/motherboard-layout.png`
 - `assets/hardware/single-gpu-prototype.jpeg`
@@ -76,3 +76,11 @@ git push origin main
 ```
 
 After this one-time upload, all seven images will be available from GitHub by `git pull`, without extra setup.
+
+## Hardware story V0.7
+
+The hardware page uses the original motherboard, prototype, PSU jumper, and PSU cabling images at `assets/hardware/`, and three machine photos already stored at `assets/hardware-reference/`.
+
+Below the PCIe bandwidth experiment, the page now explains **Pipeline Parallelism (PP)** versus **Tensor Parallelism (TP)** with side-by-side two-GPU conceptual diagrams and the implications of PCIe x1 risers.
+
+To install the four historical photos, extract the image archive into the repository root (preserving paths), then commit and push the `assets/hardware` folder. This is required once because this connector cannot directly transfer the uploaded binary files into GitHub.
