@@ -328,3 +328,19 @@ h1,h2,h3,p { margin: 0; }
 @media(max-width:1110px){.hw-step-body{grid-template-columns:1fr}.hw-photo img{min-height:270px;max-height:420px}.hw-drivers{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:790px){.hw-nodes{grid-template-columns:1fr}.hw-node-photo{height:325px}.hw-node-content>p{min-height:0}.hw-journey{margin-left:13px}.hw-milestone{padding-left:25px}.hw-step-marker{left:-18px;width:34px;height:34px;font-size:13px}}
 @media(max-width:560px){.hw-drivers{grid-template-columns:1fr}.hw-section{margin-top:60px}.hw-step-copy{padding:22px}.hw-photo-pair{grid-template-columns:1fr}.hw-photo img{min-height:240px}.hw-insight{margin:0 16px 18px}.hw-insight strong{font-size:19px}.hw-bottom-line{padding:26px}.hw-hero h1{font-size:clamp(39px,9vw,58px)}}
+
+/* Until the historical experiment images are synced, retain a clean, labeled placeholder. */
+.hw-missing-photo::before {
+  content: "Original experiment photo — add assets/hardware from the image bundle";
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 24px;
+  min-height: 250px;
+  color: var(--blue-dark);
+  font-size: 17px;
+  line-height: 1.5;
+  background: #edf5fb;
+  font-weight: 650;
+}
+.hw-image-unavailable { display: none !important; }
