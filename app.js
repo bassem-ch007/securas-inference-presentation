@@ -319,6 +319,27 @@ function sectionMarkup(layer) {
   `;
 }
 
+function dashboardMarkup() {
+  return `
+    <section class="detail-page enter">
+      <div class="eyebrow"><span class="eyebrow-bar"></span> CONTROL / SECTION 08 — ADMIN DASHBOARD</div>
+      <h1>One interface.<br><span class="accent">Full cluster control.</span></h1>
+      <p class="lead detail-lead">Explore a faithful, interactive reproduction of the Securas Control admin UI, populated with representative hosts, models, profiles, operations, users, grants, and API keys.</p>
+      <div class="topic-panel">
+        <div class="topic-panel-label">INTERACTIVE APPLICATION DEMO</div>
+        <p>The dashboard opens as a separate local page without authentication or a live backend. GPU figures, account identities, and operation events are simulated; actions cannot change real infrastructure.</p>
+        <p style="margin-top:22px"><a class="text-link" href="./dashboard/" style="display:inline-flex;background:#14865c;color:white;padding:16px 22px;border-radius:12px">Open Securas Control demo →</a></p>
+      </div>
+      <div class="section-head compact"><div><div class="eyebrow quiet">ADMIN WORKFLOWS</div><h2>Explore all nine sections.</h2></div></div>
+      <div class="point-grid">
+        <div class="point"><h3>Cluster & inventory</h3><p>Overview, worker health, GPU memory, model artifact locations.</p></div>
+        <div class="point"><h3>Model lifecycle</h3><p>Model catalog, installation, copy and runtime profile configuration.</p></div>
+        <div class="point"><h3>Operations</h3><p>Preflight, up/down lifecycle, simulated logs and execution history.</p></div>
+        <div class="point"><h3>Security & access</h3><p>Users, groups, explicit grants, callable contexts and API keys.</p></div>
+      </div>
+    </section>`;
+}
+
 function getCurrentId() {
   const match = /^#\/([a-z0-9-]*)$/.exec(window.location.hash);
   return match ? (match[1] || "home") : "home";
@@ -330,7 +351,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "dashboard" ? dashboardMarkup() : sectionMarkup(current)) : overviewMarkup();
   if (current?.id === "hardware") {
     for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {
       const showFallback = () => {
