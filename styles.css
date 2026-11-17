@@ -125,7 +125,7 @@ h1,h2,h3,p { margin: 0; }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
 
 
-/* Overview: OSI-inspired project architecture. This is a visual hierarchy, not a network packet path. */
+/* Overview: project architecture stack. The rows represent functional components, not request processing order. */
 .stack-intro {
   max-width: 850px;
   margin: -5px 0 24px;
