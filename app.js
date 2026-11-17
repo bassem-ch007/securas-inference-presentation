@@ -87,14 +87,53 @@ function overviewMarkup() {
         <div class="responsibility"><span class="responsibility-number">03</span><h3>Access</h3><p>Authorized applications consume models through a unified gateway.</p></div>
       </div>
     </section>
-    <section class="overview-block enter">
+
+    <section class="overview-block enter" aria-labelledby="architecture-stack-title">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow quiet">PLATFORM ARCHITECTURE</div>
+          <h2 id="architecture-stack-title">Seven layers. One managed platform.</h2>
+        </div>
+        <span class="section-index">TOP → FOUNDATION</span>
+      </div>
+      <p class="stack-intro">An OSI-style overview of how the project is built, from physical infrastructure to centralized administration.</p>
+      <div class="architecture-stack" role="list" aria-label="Securas Inference project layers, top to bottom">
+        <div class="stack-row stack-row--top" role="listitem">
+          <span class="stack-number">07</span><div class="stack-name">Admin Dashboard</div>
+          <p>Platform visibility, profile operations and user access</p>
+        </div>
+        <div class="stack-row stack-row--blue" role="listitem">
+          <span class="stack-number">06</span><div class="stack-name">LiteLLM Gateway</div>
+          <p>Unified inference API, virtual keys and model routing</p>
+        </div>
+        <div class="stack-row stack-row--green" role="listitem">
+          <span class="stack-number">05</span><div class="stack-name">Ansible Execution Engine</div>
+          <p>Admin-triggered model installation and profile lifecycle</p>
+        </div>
+        <div class="stack-row stack-row--blue" role="listitem">
+          <span class="stack-number">04</span><div class="stack-name">LLM Models</div>
+          <p>Local dense and mixture-of-experts model artifacts</p>
+        </div>
+        <div class="stack-row stack-row--green" role="listitem">
+          <span class="stack-number">03</span><div class="stack-name">vLLM Runtime</div>
+          <p>GPU inference, scheduling and efficient KV caching</p>
+        </div>
+        <div class="stack-row stack-row--blue" role="listitem">
+          <span class="stack-number">02</span><div class="stack-name">Docker &amp; Compose</div>
+          <p>Reproducible, configurable inference deployments</p>
+        </div>
+        <div class="stack-row stack-row--foundation" role="listitem">
+          <span class="stack-number">01</span><div class="stack-name">Physical Hardware</div>
+          <p>Master gateway, GPU worker nodes and private networking</p>
+        </div>
+      </div>
+      <p class="stack-footnote">This is a functional architecture overview, not a single sequential request path.</p>
+    </section>
+    <section class="overview-block enter last-block">
       <div class="section-head"><div><div class="eyebrow quiet">GUIDED EXPLORATION</div><h2>Explore the project layers.</h2></div><span class="section-index">${layers.length} AREAS</span></div>
       <div class="layer-grid">${layers.map(layer => `
         <article class="layer-card"><div class="card-top"><span class="layer-number">${layer.label}</span></div><span class="card-category">${layer.category}</span><h3>${htmlSafe(layer.title)}</h3><p>${htmlSafe(layer.tagline)}</p></article>
       `).join("")}</div>
-    </section>
-    <section class="overview-block enter last-block"><div class="section-head"><div><div class="eyebrow quiet">TWO COMMUNICATION PATHS</div><h2>Administration and inference stay distinct.</h2></div></div>
-      <div class="paths"><div><span class="path-label">MANAGEMENT PLANE</span><p>Administrator <b>→</b> FastAPI <b>→</b> Execution / Ansible <b>→</b> Worker</p></div><div><span class="path-label">INFERENCE PLANE</span><p>Client <b>→</b> LiteLLM <b>→</b> vLLM on Worker <b>→</b> Streamed Response</p></div></div>
     </section>
   `;
 }
