@@ -2,8 +2,8 @@
 const layers = [
   {
     id: "context", category: "FOUNDATION", label: "01", title: "Context & objectives", tagline: "Why private LLM inference?",
-    summary: "The problem, the constraints, and the reason for a centrally managed on-premises platform.",
-    focus: ["Data control and privacy", "Local inference with no cloud fallback", "Goals and scope"], status: "outline"
+    summary: "Why local inference matters, the operational challenge, and how control and data planes work together.",
+    focus: ["Privacy and control", "Centralized operations", "Control plane and data plane"], status: "complete"
   },
   {
     id: "hardware", category: "FOUNDATION", label: "02", title: "Hardware & experiments", tagline: "From proof of concept to multi-GPU workers",
@@ -138,6 +138,98 @@ function overviewMarkup() {
   `;
 }
 
+
+function contextMarkup() {
+  return \`
+    <section class="context-page enter" aria-labelledby="context-title">
+      <header class="context-hero">
+        <div class="eyebrow"><span class="eyebrow-bar"></span> FOUNDATION / 01 — CONTEXT & OBJECTIVES</div>
+        <h1 id="context-title">Private AI infrastructure.<br><span class="accent">One managed platform.</span></h1>
+        <p class="lead">SECURAS Inference brings local LLM serving, distributed GPU resources and controlled model access into a single on-premises platform.</p>
+        <div class="context-thesis"><span class="context-thesis-mark" aria-hidden="true">!</span><p><strong>The central challenge</strong> is not simply running an LLM. It is operating multiple local models securely, consistently and accessibly across separate machines.</p></div>
+      </header>
+
+      <section class="context-section" aria-labelledby="context-why">
+        <div class="context-section-heading">
+          <span class="context-index">01 / THE NEED</span>
+          <h2 id="context-why">Why build it internally?</h2>
+          <p>External inference services can introduce third-party dependencies. Running models locally solves the location-of-compute problem, but leaves important operational challenges.</p>
+        </div>
+        <div class="context-needs">
+          <article class="context-need">
+            <span class="context-need-count">01</span>
+            <h3>Data confidentiality</h3>
+            <p>Keep prompts and inference processing within infrastructure under organizational control.</p>
+          </article>
+          <article class="context-need">
+            <span class="context-need-count">02</span>
+            <h3>Operational simplicity</h3>
+            <p>Avoid manually installing, starting and troubleshooting model services independently on every worker.</p>
+          </article>
+          <article class="context-need">
+            <span class="context-need-count">03</span>
+            <h3>Consistent access</h3>
+            <p>Give authorized applications one controlled entry point instead of exposing each worker directly.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="context-section" aria-labelledby="context-goal">
+        <div class="context-section-heading">
+          <span class="context-index">02 / THE OBJECTIVE</span>
+          <h2 id="context-goal">One platform, two responsibilities.</h2>
+          <p>The platform separates infrastructure management from inference execution. Both planes operate on the same local infrastructure, but serve different purposes.</p>
+        </div>
+        <div class="plane-layout">
+          <article class="plane-card control-plane" aria-labelledby="control-plane-title">
+            <div class="plane-header">
+              <span class="plane-label">MANAGEMENT</span>
+              <h3 id="control-plane-title">Control Plane</h3>
+              <p>Decides <strong>what should run</strong>, where it should run and who may access it.</p>
+            </div>
+            <div class="plane-flow" aria-label="Administration process">
+              <div class="flow-step"><span class="flow-step-index">01</span><div><strong>Admin Dashboard</strong><span>Configuration and operations</span></div></div>
+              <span class="flow-arrow" aria-hidden="true">↓</span>
+              <div class="flow-step"><span class="flow-step-index">02</span><div><strong>FastAPI + Uvicorn</strong><span>Control API and validation</span></div></div>
+              <span class="flow-arrow" aria-hidden="true">↓</span>
+              <div class="flow-step"><span class="flow-step-index">03</span><div><strong>Execution Engine + Ansible</strong><span>Deploy and manage worker profiles</span></div></div>
+              <span class="flow-arrow" aria-hidden="true">↓</span>
+              <div class="flow-step"><span class="flow-step-index">04</span><div><strong>GPU Workers</strong><span>Apply requested runtime changes</span></div></div>
+            </div>
+            <div class="plane-support"><strong>Supporting services:</strong> PostgreSQL stores managed state; monitoring observes worker health and running services.</div>
+          </article>
+          <article class="plane-card data-plane" aria-labelledby="data-plane-title">
+            <div class="plane-header">
+              <span class="plane-label">INFERENCE</span>
+              <h3 id="data-plane-title">Data Plane</h3>
+              <p>Handles <strong>live model requests</strong> and returns generated responses to applications.</p>
+            </div>
+            <div class="plane-flow" aria-label="Inference request process">
+              <div class="flow-step"><span class="flow-step-index">01</span><div><strong>Client Application</strong><span>Authenticated inference request</span></div></div>
+              <span class="flow-arrow" aria-hidden="true">↓</span>
+              <div class="flow-step"><span class="flow-step-index">02</span><div><strong>LiteLLM Gateway</strong><span>API key validation and model routing</span></div></div>
+              <span class="flow-arrow" aria-hidden="true">↓</span>
+              <div class="flow-step"><span class="flow-step-index">03</span><div><strong>vLLM + Local Model</strong><span>GPU-based token generation</span></div></div>
+              <span class="flow-arrow" aria-hidden="true">↓</span>
+              <div class="flow-step"><span class="flow-step-index">04</span><div><strong>Generated Response</strong><span>Returned through the gateway</span></div></div>
+            </div>
+            <div class="plane-support"><strong>Serving principle:</strong> Requests are handled by locally deployed models, with no cloud inference fallback.</div>
+          </article>
+        </div>
+        <div class="planes-relationship"><span class="relationship-symbol" aria-hidden="true">↔</span><p><strong>How they connect:</strong> The control plane deploys and monitors inference services; the data plane uses those running services to answer requests.</p></div>
+      </section>
+
+      <section class="context-outcome" aria-labelledby="context-outcome-title">
+        <div>
+          <span class="context-index">03 / EXPECTED OUTCOME</span>
+          <h2 id="context-outcome-title">Local intelligence, managed centrally.</h2>
+        </div>
+        <p>Private deployment, repeatable operations and a unified inference API — without making every application manage a GPU server.</p>
+      </section>
+    </section>
+  \`;
+}
+
 function sectionMarkup(layer) {
   return `
     <section class="detail-page enter">
@@ -163,7 +255,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? sectionMarkup(current) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : sectionMarkup(current)) : overviewMarkup();
   crumb.textContent = current ? current.title.toUpperCase() : "OVERVIEW";
   position.textContent = current ? `${current.label} / ${String(layers.length).padStart(2, "0")}` : "Overview";
   document.title = current ? `${current.title} · Securas Inference` : "Securas Inference · Architecture Walkthrough";
