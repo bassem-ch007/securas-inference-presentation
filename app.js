@@ -140,7 +140,7 @@ function overviewMarkup() {
 
 
 function contextMarkup() {
-  return \`
+  return `
     <section class="context-page enter" aria-labelledby="context-title">
       <header class="context-hero">
         <div class="eyebrow"><span class="eyebrow-bar"></span> FOUNDATION / 01 — CONTEXT & OBJECTIVES</div>
@@ -227,7 +227,7 @@ function contextMarkup() {
         <p>Private deployment, repeatable operations and a unified inference API — without making every application manage a GPU server.</p>
       </section>
     </section>
-  \`;
+  `;
 }
 
 function sectionMarkup(layer) {
