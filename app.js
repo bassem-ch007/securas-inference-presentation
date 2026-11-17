@@ -11,9 +11,9 @@ const layers = [
     focus: ["Existing hardware and design goals", "PCIe and single-GPU validation", "Power adaptation", "Final three-node cluster"], status: "complete"
   },
   {
-    id: "network", category: "FOUNDATION", label: "03", title: "Private network", tagline: "LAN, NAT gateway, Tailscale VPN",
-    summary: "How the workers reach the outside world and how authorized administrators reach the infrastructure privately.",
-    focus: ["Master as gateway and NAT", "Worker network topology", "Tailscale / WireGuard / P2P"], status: "outline"
+    id: "network", category: "FOUNDATION", label: "03", title: "Private network", tagline: "LAN, NAT, Tailscale and LiteLLM routing",
+    summary: "Real cluster topology, forwarding/NAT rules, WireGuard-based Tailscale access and the LiteLLM gateway network path.",
+    focus: ["Private 192.168.100.x LAN", "NAT and forwarding", "Tailnet HTTPS entry points", "LiteLLM inference routing"], status: "complete"
   },
   {
     id: "models", category: "INFERENCE", label: "04", title: "Models & profiles", tagline: "What runs on each GPU worker",
@@ -1089,7 +1089,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "models" ? modelMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : current.id === "vllm" ? vllmMarkup() : current.id === "results" ? resultsMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "network" ? networkMarkup() : current.id === "models" ? modelMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : current.id === "vllm" ? vllmMarkup() : current.id === "results" ? resultsMarkup() : sectionMarkup(current)) : overviewMarkup();
   if (current?.id === "ansible") bindAnsibleOperations();
   if (current?.id === "models") bindModelCatalogPresentation();
   if (current?.id === "hardware") {
