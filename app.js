@@ -96,7 +96,7 @@ function overviewMarkup() {
         </div>
         <span class="section-index">TOP → FOUNDATION</span>
       </div>
-      <p class="stack-intro">An OSI-style overview of how the project is built, from physical infrastructure to centralized administration.</p>
+      <p class="stack-intro">A clear view of how the project is organized, from physical infrastructure to centralized administration.</p>
       <div class="architecture-stack" role="list" aria-label="Securas Inference project layers, top to bottom">
         <div class="stack-row stack-row--top" role="listitem">
           <span class="stack-number">07</span><div class="stack-name">Admin Dashboard</div>
