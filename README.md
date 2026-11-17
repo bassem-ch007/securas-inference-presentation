@@ -55,3 +55,24 @@ Update the `layers` array near the top of `app.js`: title, summary, focus topics
 ## Visual design (V0.2)
 
 White background, green/blue accents, larger readable typography and spacious layouts. No dependencies or build step. Hardware section remains a placeholder until reviewed.
+
+## Hardware & Experiments photos (V0.6)
+
+The three final machine photos already live at `assets/hardware-reference/` and are included in normal pulls.
+
+The four newly supplied historical experiment photos have been organized into a separate image bundle, because the connected GitHub integration can edit source files but does not accept local binary photo uploads. Extract `securas-hardware-images-bundle.zip` from the accompanying ChatGPT response directly into the project root, so these exact files exist:
+
+- `assets/hardware/motherboard-layout.png`
+- `assets/hardware/single-gpu-prototype.jpeg`
+- `assets/hardware/psu-jumper.jpeg`
+- `assets/hardware/psu-cabling.jpeg`
+
+Then publish the images once:
+
+```bash
+git add assets/hardware
+git commit -m "assets: add hardware experiment photos"
+git push origin main
+```
+
+After this one-time upload, all seven images will be available from GitHub by `git pull`, without extra setup.
