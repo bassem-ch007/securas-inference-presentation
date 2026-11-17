@@ -81,7 +81,7 @@ h1,h2,h3,p { margin: 0; }
 .responsibility p, .layer-card p { font-size: 17px; color: var(--muted); line-height: 1.6; }
 .layer-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .layer-card { border: 1px solid var(--line); background: white; border-radius: var(--radius); min-height: 214px; padding: 26px; display: flex; flex-direction: column; transition: border-color .15s,background .15s,transform .15s,box-shadow .15s; }
-.layer-card:hover { border-color: #80b7d9; background: #fbfdff; transform: translateY(-3px); box-shadow: 0 9px 25px rgba(32,101,182,.08); }
+.layer-card:hover { border-color: var(--line); background: white; transform: none; box-shadow: none; }
 .card-top { display: flex; justify-content: space-between; align-items: center; }
 .layer-number { font-size: 27px; color: var(--blue); font-weight: 750; }
 .card-arrow { color: var(--green); font-size: 28px; }
