@@ -41,9 +41,9 @@ const layers = [
     focus: ["Inventory", "Profile actions", "Users, groups, grants", "Health and operations"], status: "outline"
   },
   {
-    id: "gateway", category: "DELIVERY", label: "09", title: "LiteLLM gateway", tagline: "Controlled access to inference",
-    summary: "Virtual API keys, model routes and isolated backend credentials behind a single OpenAI-compatible API.",
-    focus: ["Consumer and backend keys", "Model routes", "Request path", "No cloud fallback"], status: "outline"
+    id: "gateway", category: "DELIVERY", label: "09", title: "LiteLLM gateway", tagline: "Unified API, profiles and access grants",
+    summary: "Profile registration, exact-profile routing, direct/group grants, scoped virtual API keys and private vLLM backends.",
+    focus: ["Route registration", "Direct and group grants", "Virtual API keys", "Profile-based forwarding"], status: "complete"
   },
   {
     id: "results", category: "DELIVERY", label: "10", title: "Benchmarks & outcomes", tagline: "Evidence, trade-offs, next steps",
@@ -738,7 +738,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : sectionMarkup(current)) : overviewMarkup();
   if (current?.id === "ansible") bindAnsibleOperations();
   if (current?.id === "hardware") {
     for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {
