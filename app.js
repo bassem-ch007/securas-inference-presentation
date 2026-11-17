@@ -28,7 +28,7 @@ const layers = [
   {
     id: "master", category: "CONTROL", label: "06", title: "Master & services", tagline: "The control plane",
     summary: "FastAPI under Uvicorn, PostgreSQL, the execution service, the monitoring service and their responsibilities.",
-    focus: ["Control API", "PostgreSQL state", "Job execution", "Monitoring and health"], status: "outline"
+    focus: ["Control API", "PostgreSQL state", "Job execution", "Monitoring and health"], status: "complete"
   },
   {
     id: "ansible", category: "CONTROL", label: "07", title: "Ansible operations", tagline: "From an admin action to a running service",
@@ -581,6 +581,117 @@ function bindAnsibleOperations() {
   });
 }
 
+
+/* ==============================================================
+   SECTION 06 — MASTER / CONTROL PLANE SERVICES
+   Architecture-aligned presentation text, deliberately no backend.
+   ============================================================== */
+function masterMarkup() {
+  return `
+    <section class="master-page enter" aria-labelledby="master-title">
+      <header class="master-hero">
+        <div class="eyebrow"><span class="eyebrow-bar"></span> CONTROL / 06 — MASTER &amp; SERVICES</div>
+        <div class="master-hero-grid">
+          <div class="master-hero-copy">
+            <h1 id="master-title">The master coordinates.<br><span class="accent">The workers compute.</span></h1>
+            <p class="master-lead"><strong>worker-acer</strong> is the central control node. It manages the cluster, stores configuration, executes approved operations and provides one secure entry point to local inference.</p>
+            <div class="master-pills" aria-label="Master characteristics"><span>One control node</span><span>Two GPU workers</span><span>Private network</span><span>No cloud inference</span></div>
+          </div>
+          <figure class="master-hero-photo">
+            <img src="./assets/hardware-reference/hardware-01.jpeg" alt="The worker-acer master machine used as the Securas control node" loading="lazy">
+            <figcaption><strong>worker-acer</strong><span>Master / Gateway · Ubuntu Server</span></figcaption>
+          </figure>
+        </div>
+      </header>
+
+      <section class="master-section" aria-labelledby="master-roles-title">
+        <div class="master-section-header"><span class="master-section-number">01 / SERVICES</span><h2 id="master-roles-title">Six services. Clear responsibilities.</h2><p>Each component has one main job. Together, they let a single administrator manage a distributed inference platform.</p></div>
+        <div class="master-services">
+          <article class="master-service-card">
+            <div class="master-service-top"><span class="master-service-index">01</span><span class="master-service-type">CONTROL</span></div>
+            <h3>FastAPI + Admin UI</h3><p>The administrator's interface: authentication, model and profile management, access control and validated API requests.</p>
+            <div class="master-service-foot">Web application · Uvicorn</div>
+          </article>
+          <article class="master-service-card">
+            <div class="master-service-top"><span class="master-service-index">02</span><span class="master-service-type">STATE</span></div>
+            <h3>PostgreSQL</h3><p>Stores the desired configuration: hosts, GPUs, models, profiles, users, grants and persistent operation history.</p>
+            <div class="master-service-foot">Source of truth for desired state</div>
+          </article>
+          <article class="master-service-card">
+            <div class="master-service-top"><span class="master-service-index">03</span><span class="master-service-type">EXECUTION</span></div>
+            <h3>Operation Runner</h3><p>Receives approved operation IDs, acquires resource locks and launches only supported deployment or model tasks.</p>
+            <div class="master-service-foot">systemd units · operation tracking</div>
+          </article>
+          <article class="master-service-card">
+            <div class="master-service-top"><span class="master-service-index">04</span><span class="master-service-type">AUTOMATION</span></div>
+            <h3>Ansible Controller</h3><p>Connects to GPU workers over private SSH to install models, validate resources and manage Docker Compose runtimes.</p>
+            <div class="master-service-foot">Playbooks · dynamic inventory</div>
+          </article>
+          <article class="master-service-card">
+            <div class="master-service-top"><span class="master-service-index">05</span><span class="master-service-type">OBSERVABILITY</span></div>
+            <h3>Status Collector</h3><p>Checks reachable workers, GPU utilization, installed artifacts and running containers to produce a current cluster snapshot.</p>
+            <div class="master-service-foot">Docker + nvidia-smi · ~5 s timer</div>
+          </article>
+          <article class="master-service-card">
+            <div class="master-service-top"><span class="master-service-index">06</span><span class="master-service-type">ACCESS</span></div>
+            <h3>LiteLLM Gateway</h3><p>Provides a single OpenAI-compatible API, routes calls to the right local vLLM profile and applies API-key access rules.</p>
+            <div class="master-service-foot">One gateway · exact profile routes</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="master-section" aria-labelledby="master-paths-title">
+        <div class="master-section-header"><span class="master-section-number">02 / REQUEST PATHS</span><h2 id="master-paths-title">Two entry points. Two different jobs.</h2><p>Administration and inference share the master machine, but follow separate workflows.</p></div>
+        <div class="master-paths">
+          <article class="master-path master-path-admin">
+            <div class="master-path-heading"><span class="master-path-number">A</span><div><h3>Administration path</h3><p>Manage infrastructure</p></div></div>
+            <div class="master-path-chain" role="list" aria-label="Administration request path">
+              <div class="master-path-step" role="listitem"><strong>Administrator</strong><span>Browser</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step" role="listitem"><strong>Tailscale Serve</strong><span>Private HTTPS :443</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step master-path-focus" role="listitem"><strong>FastAPI + PostgreSQL</strong><span>Validate request · record desired state</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step" role="listitem"><strong>Runner + Ansible</strong><span>Check / install / start / stop</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step" role="listitem"><strong>GPU workers</strong><span>Apply changes through SSH</span></div>
+            </div>
+          </article>
+          <article class="master-path master-path-inference">
+            <div class="master-path-heading"><span class="master-path-number">B</span><div><h3>Inference path</h3><p>Consume local AI models</p></div></div>
+            <div class="master-path-chain" role="list" aria-label="Inference request path">
+              <div class="master-path-step" role="listitem"><strong>Client application</strong><span>OpenAI-compatible request + API key</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step" role="listitem"><strong>Tailscale Serve</strong><span>Private HTTPS :8443</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step master-path-focus" role="listitem"><strong>LiteLLM Gateway</strong><span>Authorize key · select exact profile</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step" role="listitem"><strong>vLLM on GPU worker</strong><span>Generate tokens locally</span></div><span class="master-step-arrow" aria-hidden="true">↓</span>
+              <div class="master-path-step" role="listitem"><strong>Model response</strong><span>Return generated tokens to client</span></div>
+            </div>
+          </article>
+        </div>
+        <p class="master-path-note"><strong>Separation of concerns:</strong> the master controls the platform and exposes its API. The inference workloads run on <strong>worker-aero</strong> and <strong>worker-lenovo</strong>, not through the FastAPI control service.</p>
+      </section>
+
+      <section class="master-section" aria-labelledby="master-state-title">
+        <div class="master-section-header"><span class="master-section-number">03 / CLUSTER VISIBILITY</span><h2 id="master-state-title">Configured state is not running state.</h2><p>The dashboard needs to know both what we want to run and what is actually available.</p></div>
+        <div class="master-state-grid">
+          <article class="master-state-card master-desired">
+            <span class="master-state-label">DESIRED STATE</span><h3>PostgreSQL</h3>
+            <p>What should exist: model catalog, selected worker, GPU assignment, ports and profile configuration.</p>
+            <div class="master-state-example">Example: Qwen profile <strong>enabled</strong> on worker-aero.</div>
+          </article>
+          <span class="master-state-compare" aria-hidden="true">+</span>
+          <article class="master-state-card master-observed">
+            <span class="master-state-label">OBSERVED STATE</span><h3>Status Collector</h3>
+            <p>What exists now: worker health, real GPU availability, installed model files and running vLLM containers.</p>
+            <div class="master-state-example">Example: Profile <strong>stopped</strong>; GPUs available.</div>
+          </article>
+        </div>
+        <div class="master-state-result"><span class="master-state-result-icon" aria-hidden="true">✓</span><p><strong>Dashboard = desired configuration + observed reality.</strong> A configured profile is not necessarily running; an enabled model is not necessarily installed on every worker.</p></div>
+      </section>
+
+      <section class="master-final">
+        <div><span class="master-section-number">NEXT / FROM CONTROL TO ACTION</span><h2>The master decides <em>what</em>. Ansible applies <em>how</em>.</h2><p>See how a dashboard request becomes an auditable operation that changes a GPU worker.</p></div>
+        <a class="master-next-button" href="#/ansible">Explore Ansible Operations <span aria-hidden="true">→</span></a>
+      </section>
+    </section>`;
+}
+
 function sectionMarkup(layer) {
   return `
     <section class="detail-page enter">
@@ -627,7 +738,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : sectionMarkup(current)) : overviewMarkup();
   if (current?.id === "ansible") bindAnsibleOperations();
   if (current?.id === "hardware") {
     for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {

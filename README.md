@@ -100,3 +100,17 @@ This presentation section is implemented (no build process, dependencies or prod
 The five durable dashboard operations are distinct from **model adopt**, which is available through the administrative CLI, not through the web UI. All walkthroughs are explanatory and do not execute any real operations.
 
 Source of operational truth: `bassem-ch007/securas-inference`, especially `docs/05-model-lifecycle.md`, `docs/06-profile-lifecycle.md`, `docs/07-operation-engine-and-privilege-boundary.md`, and `docs/08-ansible-automation.md`.
+
+## Master & services page (Section 06)
+
+Open `http://localhost:8000/#/master`.
+
+This section explains the worker-acer control node with a guided, reading-first layout:
+
+- One master-node overview with its real reference photograph.
+- Six operational responsibilities: FastAPI/Admin UI, PostgreSQL, operation runner, Ansible controller, status collector, and LiteLLM gateway.
+- Two separate private Tailscale paths: admin control (HTTPS 443) and client inference (HTTPS 8443).
+- The distinction between desired state (PostgreSQL) and observed state (status collector).
+- A direct continuation to `#/ansible` for the playbook lifecycle.
+
+The page is static and uses no live API. Its architecture and service claims are based on the Securas Inference system architecture, control API, database, status-collector, LiteLLM, and Tailscale documentation.
