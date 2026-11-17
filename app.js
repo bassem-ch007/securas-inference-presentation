@@ -6,9 +6,9 @@ const layers = [
     focus: ["Privacy and control", "Centralized operations", "Control plane and data plane"], status: "complete"
   },
   {
-    id: "hardware", category: "FOUNDATION", label: "02", title: "Hardware & experiments", tagline: "From proof of concept to multi-GPU workers",
-    summary: "Three machines, their roles, GPU allocation, and the PCIe bandwidth experiments that shaped the final design.",
-    focus: ["Prototype and single-GPU baseline", "Final three machines", "PCIe x1 risers, PP versus TP"], status: "reference assets saved"
+    id: "hardware", category: "FOUNDATION", label: "02", title: "Hardware & experiments", tagline: "From prototype to a three-node inference platform",
+    summary: "Real experiments, power and PCIe constraints, and the resulting on-premises GPU cluster.",
+    focus: ["Existing hardware and design goals", "PCIe and single-GPU validation", "Power adaptation", "Final three-node cluster"], status: "complete"
   },
   {
     id: "network", category: "FOUNDATION", label: "03", title: "Private network", tagline: "LAN, NAT gateway, Tailscale VPN",
@@ -230,6 +230,81 @@ function contextMarkup() {
   `;
 }
 
+
+function hardwareMarkup() {
+  return `
+    <article class="hw-page enter" aria-labelledby="hw-title">
+      <header class="hw-hero">
+        <div class="eyebrow"><span class="eyebrow-bar"></span> FOUNDATION / 02 — HARDWARE &amp; EXPERIMENTS</div>
+        <h1 id="hw-title">From first test to <span class="accent">multi-GPU infrastructure.</span></h1>
+        <p class="lead">We started with available desktop hardware, validated local inference in a small prototype, solved physical integration challenges, and assembled a master node with two dedicated GPU workers.</p>
+        <div class="hw-facts"><span>3 physical machines</span><span>5 × RTX 3090 planned across workers</span><span>1 × RTX 3070 on master</span></div>
+      </header>
+
+      <section class="hw-section" aria-labelledby="hw-guides">
+        <header class="hw-heading"><span class="hw-kicker">01 / DESIGN DRIVERS</span><h2 id="hw-guides">Building within real constraints</h2><p>The project was designed around the machines we already owned, not an idealized data-center configuration.</p></header>
+        <div class="hw-drivers">
+          <div class="hw-driver"><span class="hw-driver-icon" aria-hidden="true">▣</span><h3>Reuse available hardware</h3><p>Adapt existing PCs and GPUs instead of buying a dedicated inference server.</p></div>
+          <div class="hw-driver"><span class="hw-driver-icon" aria-hidden="true">⌂</span><h3>Entirely local inference</h3><p>Keep deployed models and inference processing on-premises, without cloud fallback.</p></div>
+          <div class="hw-driver"><span class="hw-driver-icon" aria-hidden="true">↔</span><h3>Memory &amp; PCIe limits</h3><p>Choose model profiles and parallelism to suit available VRAM and interconnect bandwidth.</p></div>
+          <div class="hw-driver"><span class="hw-driver-icon" aria-hidden="true">◎</span><h3>Shared access</h3><p>Make inference available to multiple applications through controlled API access.</p></div>
+          <div class="hw-driver"><span class="hw-driver-icon" aria-hidden="true">◇</span><h3>Lightweight operations</h3><p>Manage a small distributed deployment remotely with practical automation.</p></div>
+        </div>
+      </section>
+
+      <section class="hw-section" aria-labelledby="hw-journey">
+        <header class="hw-heading"><span class="hw-kicker">02 / BUILD JOURNEY</span><h2 id="hw-journey">What we tested, changed, and learned</h2><p>A short engineering timeline: motherboard limits → single-GPU proof of concept → external power → scalable worker configurations.</p></header>
+        <div class="hw-journey">
+          <article class="hw-milestone">
+            <div class="hw-step-marker"><span>01</span></div>
+            <div class="hw-step-body"><div class="hw-step-copy"><span class="hw-step-type">EXPLORE</span><h3>Understand the motherboard</h3><p>We inspected the physical PCIe slots and power connections before designing GPU expansion. A PCIe x16 slot supported a direct GPU setup, while a PCIe x1 slot suggested an alternative via risers.</p><div class="hw-inline-fact">Decision: test feasibility before scaling.</div></div>
+            <figure class="hw-photo hw-photo-diagram"><img src="./assets/hardware/motherboard-layout.png" alt="Annotated motherboard placement guide showing the PCIe x16 and PCIe x1 slots, CPU, memory and power connectors" loading="lazy"><figcaption>Motherboard layout — PCIe slot and power planning</figcaption></figure></div>
+          </article>
+          <article class="hw-milestone">
+            <div class="hw-step-marker"><span>02</span></div>
+            <div class="hw-step-body"><div class="hw-step-copy"><span class="hw-step-type">VALIDATE</span><h3>First single-GPU proof of concept</h3><p>We assembled a basic GPU test bench to run local inference before investing in a multi-card setup. In our test, restricted PCIe bandwidth had little visible impact when serving on one GPU.</p><div class="hw-inline-fact">Finding: single-GPU inference remained practical.</div></div>
+            <figure class="hw-photo"><img src="./assets/hardware/single-gpu-prototype.jpeg" alt="Early experimental motherboard with one GeForce RTX graphics card installed for local inference testing" loading="lazy"><figcaption>Early physical proof of concept</figcaption></figure></div>
+          </article>
+          <article class="hw-milestone">
+            <div class="hw-step-marker"><span>03</span></div>
+            <div class="hw-step-body"><div class="hw-step-copy"><span class="hw-step-type">ADAPT</span><h3>Power delivery for multiple GPUs</h3><p>Adding several high-power cards required careful PSU capacity planning and physical cabling. We tested a secondary-PSU jumper/synchronization arrangement and incorporated a LEPA G1600 supply for the main multi-GPU worker.</p><div class="hw-inline-fact">Decision: separate GPU power planning from motherboard expansion.</div></div>
+            <div class="hw-photo-pair">
+              <figure class="hw-photo"><img src="./assets/hardware/psu-jumper.jpeg" alt="Prototype dual-power-supply jumper adapter with 24-pin ATX connector" loading="lazy"><figcaption>PSU jumper / synchronization adapter</figcaption></figure>
+              <figure class="hw-photo"><img src="./assets/hardware/psu-cabling.jpeg" alt="High-wattage modular PSU showing separate power cable outputs for the GPU setup" loading="lazy"><figcaption>Modular PSU cabling</figcaption></figure>
+            </div></div>
+          </article>
+          <article class="hw-milestone hw-milestone-highlight">
+            <div class="hw-step-marker"><span>04</span></div>
+            <div class="hw-step-body"><div class="hw-step-copy"><span class="hw-step-type">SCALE</span><h3>PCIe x1 risers changed the multi-GPU equation</h3><p>A single card mainly computes from weights in its own VRAM. With multiple cards collaborating on one model, GPU-to-GPU transfers added latency over the restricted x1 links.</p><p>We therefore favored <strong>Pipeline Parallelism (PP)</strong> in selected model profiles and avoided communication-heavy <strong>Tensor Parallelism (TP)</strong> on the riser-based setup.</p></div>
+              <div class="hw-insight"><span class="hw-insight-label">KEY EXPERIMENTAL INSIGHT</span><strong>PCIe bandwidth was manageable for our single-GPU test, but became a constraint when several GPUs needed to cooperate.</strong><span>PP was viable, but communication and pipeline overhead affected speed; TP was unsuitable for this interconnect.</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="hw-section" aria-labelledby="hw-cluster">
+        <header class="hw-heading"><span class="hw-kicker">03 / FINAL ARCHITECTURE</span><h2 id="hw-cluster">The three-machine platform</h2><p>One central master handles network access and orchestration. Two worker nodes provide the primary large-model compute capacity.</p></header>
+        <div class="hw-nodes">
+          <article class="hw-node">
+            <figure class="hw-node-photo"><img src="./assets/hardware-reference/hardware-01.jpeg" alt="Master host in its tower case with GeForce RTX GPU visible" loading="lazy"></figure>
+            <div class="hw-node-content"><span class="hw-node-role">MASTER / GATEWAY</span><h3>worker-acer</h3><p>Central control, private network gateway and lightweight auxiliary inference.</p><dl><div><dt>GPU</dt><dd>1 × RTX 3070</dd></div><div><dt>Platform</dt><dd>Ubuntu Server 26.04 LTS</dd></div><div><dt>Role</dt><dd>Control API · Database · LiteLLM · NAT · Tailscale</dd></div></dl></div>
+          </article>
+          <article class="hw-node">
+            <figure class="hw-node-photo"><img src="./assets/hardware-reference/hardware-02.jpeg" alt="Lenovo inference worker with two RTX 3090 graphics cards on a custom open frame" loading="lazy"></figure>
+            <div class="hw-node-content"><span class="hw-node-role">INFERENCE WORKER 02</span><h3>worker-lenovo</h3><p>Secondary large-model deployment node, with two RTX 3090 cards.</p><dl><div><dt>Processor</dt><dd>Intel Core i7-6700</dd></div><div><dt>Memory</dt><dd>32 GB RAM</dd></div><div><dt>GPU</dt><dd>2 × RTX 3090 · 24 GB each</dd></div></dl></div>
+          </article>
+          <article class="hw-node">
+            <figure class="hw-node-photo"><img src="./assets/hardware-reference/hardware-03.jpeg" alt="Primary worker with three GeForce RTX cards, green cooling fans and external high-power PSU" loading="lazy"></figure>
+            <div class="hw-node-content"><span class="hw-node-role">INFERENCE WORKER 01</span><h3>worker-aero</h3><p>Main multi-GPU inference machine, assembled using PCIe x1 risers and an external power configuration.</p><dl><div><dt>Processor</dt><dd>Intel Core i5-9400F</dd></div><div><dt>Memory</dt><dd>32 GB RAM</dd></div><div><dt>GPU</dt><dd>3 × RTX 3090 target · 24 GB each</dd></div><div><dt>Power</dt><dd>LEPA G1600</dd></div></dl></div>
+          </article>
+        </div>
+        <div class="hw-status-note"><strong>Installed hardware vs. operational capacity.</strong> Five RTX 3090 cards are allocated across the two worker builds, but GPU detection and stability—particularly the third card on worker-aero—have to be checked before claiming all cards are simultaneously active.</div>
+      </section>
+      <section class="hw-bottom-line"><span>ENGINEERING OUTCOME</span><h2>A working design shaped by real limits.</h2><p>Physical expansion, PSU capacity, PCIe communication, and model placement all influenced the software platform that followed.</p></section>
+    </article>
+  `;
+}
+
 function sectionMarkup(layer) {
   return `
     <section class="detail-page enter">
@@ -255,7 +330,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : sectionMarkup(current)) : overviewMarkup();
   crumb.textContent = current ? current.title.toUpperCase() : "OVERVIEW";
   position.textContent = current ? `${current.label} / ${String(layers.length).padStart(2, "0")}` : "Overview";
   document.title = current ? `${current.title} · Securas Inference` : "Securas Inference · Architecture Walkthrough";
