@@ -280,6 +280,36 @@ function hardwareMarkup() {
             </div>
           </article>
         </div>
+        <section class="hw-parallelism" aria-labelledby="hw-parallelism-title">
+          <div class="hw-parallelism-heading">
+            <span class="hw-kicker">MULTI-GPU MODEL EXECUTION</span>
+            <h3 id="hw-parallelism-title">Pipeline Parallelism vs. Tensor Parallelism</h3>
+            <p>Both approaches divide one model across multiple GPUs. They differ in <strong>what they split</strong> and <strong>how often GPUs communicate</strong>.</p>
+          </div>
+          <div class="hw-parallelism-grid">
+            <article class="hw-parallel-card hw-parallel-pp">
+              <div class="hw-parallel-top"><span class="hw-parallel-icon">PP</span><div><h4>Pipeline Parallelism</h4><span class="hw-parallel-sub">Split model layers into stages</span></div></div>
+              <div class="hw-parallel-visual" role="img" aria-label="Pipeline parallelism: GPU zero runs an early group of layers then sends activations to GPU one running later layers">
+                <div class="hw-gpu-block"><span>GPU 0</span><strong>Layers 1–N</strong><small>Stage A</small></div>
+                <div class="hw-gpu-arrow" aria-hidden="true">→</div>
+                <div class="hw-gpu-block"><span>GPU 1</span><strong>Layers N+1–end</strong><small>Stage B</small></div>
+              </div>
+              <p>Each GPU executes a different group of layers. Activations pass between stages at their boundaries.</p>
+              <div class="hw-parallel-bottom"><strong>Our choice:</strong> Reduced cross-GPU communication frequency made PP more workable with PCIe x1 risers, although transfers and pipeline overhead still add latency.</div>
+            </article>
+            <article class="hw-parallel-card hw-parallel-tp">
+              <div class="hw-parallel-top"><span class="hw-parallel-icon">TP</span><div><h4>Tensor Parallelism</h4><span class="hw-parallel-sub">Split computations inside the same layers</span></div></div>
+              <div class="hw-parallel-visual" role="img" aria-label="Tensor parallelism: GPU zero and GPU one each execute a shard of the same layer and repeatedly synchronize results">
+                <div class="hw-gpu-block"><span>GPU 0</span><strong>Layer shard A</strong><small>Partial computation</small></div>
+                <div class="hw-gpu-arrow" aria-hidden="true">↔</div>
+                <div class="hw-gpu-block"><span>GPU 1</span><strong>Layer shard B</strong><small>Synchronization</small></div>
+              </div>
+              <p>Both GPUs work on parts of the same layers. Their partial results require frequent communication and synchronization.</p>
+              <div class="hw-parallel-bottom"><strong>Our constraint:</strong> PCIe x1 links provide too little bandwidth for communication-heavy TP to be a practical configuration in this setup.</div>
+            </article>
+          </div>
+          <p class="hw-parallel-caption">Illustrative two-GPU comparison. Actual performance depends on model architecture, GPU topology, batch size and runtime configuration.</p>
+        </section>
       </section>
 
       <section class="hw-section" aria-labelledby="hw-cluster">
