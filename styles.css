@@ -344,3 +344,34 @@ h1,h2,h3,p { margin: 0; }
   font-weight: 650;
 }
 .hw-image-unavailable { display: none !important; }
+
+
+/* Parallelism explainer under the hardware experiment */
+.hw-parallelism { margin-top: 29px; padding: 29px; border: 1px solid #c8dfe8; border-radius: 18px; background: #f7fbfd; }
+.hw-parallelism-heading h3 { margin: 9px 0 12px; font-size: clamp(27px,2.6vw,38px); line-height: 1.2; letter-spacing: -.038em; }
+.hw-parallelism-heading p { max-width: 890px; font-size: 18px; line-height: 1.6; color: var(--muted); }
+.hw-parallelism-heading strong { color: var(--ink); }
+.hw-parallelism-grid { margin-top: 25px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.hw-parallel-card { background: #fff; border: 1px solid #cde3d6; border-radius: 15px; padding: 23px; display: flex; flex-direction: column; gap: 18px; }
+.hw-parallel-tp { border-color: #c4daef; }
+.hw-parallel-top { display: flex; align-items: center; gap: 15px; }
+.hw-parallel-icon { flex: 0 0 52px; height: 52px; display: grid; place-items: center; border-radius: 12px; background: #e1f3e9; color: var(--green-dark); font-size: 19px; font-weight: 850; }
+.hw-parallel-tp .hw-parallel-icon { background: #e4f0fb; color: var(--blue-dark); }
+.hw-parallel-top h4 { margin: 0 0 4px; color: var(--ink); font-size: 23px; letter-spacing: -.03em; }
+.hw-parallel-sub { display: block; font-size: 15px; color: var(--muted); line-height: 1.35; }
+.hw-parallel-visual { display: flex; align-items: stretch; gap: 10px; padding: 15px; background: #f3faf6; border-radius: 13px; }
+.hw-parallel-tp .hw-parallel-visual { background: #f2f7fd; }
+.hw-gpu-block { display: flex; flex: 1; min-width: 0; flex-direction: column; justify-content: center; gap: 6px; border: 1px solid #acd5c2; border-radius: 9px; padding: 15px 11px; text-align: center; background: #fff; }
+.hw-parallel-tp .hw-gpu-block { border-color: #b4d3eb; }
+.hw-gpu-block > span { color: var(--green-dark); font-size: 14px; font-weight: 850; }
+.hw-parallel-tp .hw-gpu-block > span { color: var(--blue-dark); }
+.hw-gpu-block strong { font-size: 17px; line-height: 1.3; color: var(--ink); }
+.hw-gpu-block small { font-size: 14px; color: var(--muted); }
+.hw-gpu-arrow { display: grid; place-items: center; font-size: 32px; font-weight: 900; color: var(--green); }
+.hw-parallel-tp .hw-gpu-arrow { color: var(--blue); }
+.hw-parallel-card > p { font-size: 17px; color: var(--muted); line-height: 1.6; }
+.hw-parallel-bottom { font-size: 16px; line-height: 1.65; color: #315b4c; background: #edf8f2; padding: 15px 17px; border-radius: 9px; margin-top: auto; }
+.hw-parallel-tp .hw-parallel-bottom { color: #385978; background: #edf5fd; }
+.hw-parallel-caption { margin-top: 14px; font-size: 15px; line-height: 1.5; color: var(--muted); }
+@media(max-width:1120px) { .hw-parallelism-grid { grid-template-columns: 1fr; } }
+@media(max-width:560px) { .hw-parallelism { padding: 18px; } .hw-parallel-card { padding: 17px; } .hw-parallel-visual { padding: 10px; gap: 5px; } .hw-gpu-block { padding: 11px 6px; } .hw-gpu-block strong { font-size: 14px; } .hw-gpu-block small { font-size: 12px; } .hw-gpu-arrow { font-size: 26px; } .hw-parallel-top h4 { font-size: 21px; } }
