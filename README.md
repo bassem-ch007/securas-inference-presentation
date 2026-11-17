@@ -129,3 +129,17 @@ This completed page contains two selected sections:
 **All performance numbers are synthetic placeholders; no measured hardware benchmark is claimed.** The example TTFT, output tokens/s, VRAM consumption and concurrency are fabricated for presentation layout. The displayed test conditions are hypothetical, and configured context limits are **not** measured maximum tested contexts. Replace values with repeatable measurements before using them as benchmark evidence. The page explicitly labels simulated values.
 
 There are no dependencies or API requests; this is a static web presentation.
+
+## Models & profiles page (Section 04)
+
+Open `http://localhost:8000/#/models` from the presentation site's sidebar.
+
+This implemented, static page covers:
+- Four catalog entries verified from `securas-inference/docs/reference/current-production-inventory.md`: GPT-OSS 20B, Qwen3.6 27B FP8, Qwen3.6 35B A3B FP8, and Qwen3.8 27B FP8.
+- A small explanation of Dense, MoE and FP8.
+- The distinction between a **model artifact**, a **configured profile**, and a **running vLLM service**.
+- An interactive, filterable-by-model table of **all 13 documented profile configurations** with worker, GPU indices, TP/PP, configured max context and max sequence count.
+- Qwen3.8 placement examples from the browser E2E validation: worker-aero GPUs 1/2 and worker-lenovo GPUs 0/1, both with TP 1 / PP 2.
+- A transition to the vLLM runtime presentation.
+
+The page uses repository-derived inventory examples, not live API results. Configured context and sequence limits are **not** performance measurements or guarantees. Profile definitions can share GPUs or ports and are not all active simultaneously. No external dependencies or login are needed.

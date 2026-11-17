@@ -18,7 +18,7 @@ const layers = [
   {
     id: "models", category: "INFERENCE", label: "04", title: "Models & profiles", tagline: "What runs on each GPU worker",
     summary: "Model artifacts, multiple runtime profiles, quantization, and the distinction between dense, MoE and multi-model serving.",
-    focus: ["Model inventory", "GPU assignment", "Docker Compose deployments", "Dense vs MoE"], status: "outline"
+    focus: ["Model inventory", "Profile configurations", "GPU placement", "Model vs runtime"], status: "complete"
   },
   {
     id: "vllm", category: "INFERENCE", label: "05", title: "vLLM runtime", tagline: "From GPU memory to streamed tokens",
@@ -825,6 +825,224 @@ function resultsMarkup() {
   </section>`;
 }
 
+/* ==============================================================
+   SECTION 04 — MODELS & PROFILES
+   Documented model catalog and configured runtime profiles.
+   Static teaching UI; no API, no live runtime claims.
+   ============================================================== */
+
+const modelCatalogPresentation = [
+  { id: "gpt-oss-20b", name: "GPT-OSS 20B", family: "OpenAI · GPT-OSS",
+    source: "openai/gpt-oss-20b", type: "Mixture of Experts",
+    format: "Catalog model", description: "A local 20B-class model with single-GPU profiles on both workers." },
+  { id: "qwen3.6-27b-fp8", name: "Qwen3.6 27B FP8", family: "Qwen · 27B",
+    source: "Qwen/Qwen3.6-27B-FP8", type: "Dense",
+    format: "FP8", description: "A 27B dense model with balanced, long-context and throughput-oriented profiles." },
+  { id: "qwen3.6-35b-a3b-fp8", name: "Qwen3.6 35B A3B FP8", family: "Qwen · 35B A3B",
+    source: "Qwen/Qwen3.6-35B-A3B-FP8", type: "Mixture of Experts",
+    format: "FP8", description: "A sparse MoE model with approximately 3B activated parameters per token." },
+  { id: "qwen3.8-27b-fp8", name: "Qwen3.8 27B FP8", family: "Qwen · 27B",
+    source: "Qwen/Qwen3.8-27B-FP8", type: "Dense",
+    format: "FP8", description: "The model used for the final browser-to-gateway end-to-end validation on both workers." }
+];
+
+const modelProfilesPresentation = [
+  ["qwen3.6-27b-fp8","qwen3.6-27b-fp8-aero-2gpu-balanced","worker-aero","0, 1",1,2,"10,000",1,8192],
+  ["qwen3.6-27b-fp8","qwen3.6-27b-fp8-aero-2gpu-longctx","worker-aero","0, 1",1,2,"32,768",2,8192],
+  ["qwen3.6-27b-fp8","qwen3.6-27b-fp8-aero-2gpu-throughput","worker-aero","0, 1",1,2,"8,192",24,16384],
+  ["qwen3.6-27b-fp8","qwen3.6-27b-fp8-lenovo-2gpu-balanced","worker-lenovo","0, 1",1,2,"16,384",16,8192],
+  ["qwen3.6-35b-a3b-fp8","qwen3.6-35b-a3b-fp8-aero-2gpu-balanced","worker-aero","0, 1",1,2,"16,384",4,8192],
+  ["qwen3.6-35b-a3b-fp8","qwen3.6-35b-a3b-fp8-aero-2gpu-longctx","worker-aero","0, 1",1,2,"32,768",2,4096],
+  ["qwen3.6-35b-a3b-fp8","qwen3.6-35b-a3b-fp8-aero-2gpu-throughput","worker-aero","0, 1",1,2,"8,192",8,8192],
+  ["qwen3.6-35b-a3b-fp8","qwen3.6-35b-a3b-fp8-lenovo-2gpu-balanced","worker-lenovo","0, 1",1,2,"16,384",4,null],
+  ["qwen3.8-27b-fp8","qwen3.8-27b-fp8-aero-2gpu-balanced","worker-aero","1, 2",1,2,"10,000",2,8192],
+  ["qwen3.8-27b-fp8","qwen3.8-27b-fp8-lenovo-2gpu-balanced","worker-lenovo","0, 1",1,2,"10,000",4,8192],
+  ["gpt-oss-20b","gpt-oss-20b-lenovo-1gpu-balanced","worker-lenovo","0",1,1,"16,384",32,8192],
+  ["gpt-oss-20b","gpt-oss-20b-aero-1gpu-balanced","worker-aero","0",1,1,"13,000",2,8192],
+  ["gpt-oss-20b","gpt-oss-20b-aero-1gpu-throughput","worker-aero","1",1,1,"4,000",9,3000]
+].map(([modelId, name, worker, gpuIndices, tp, pp, context, maxSeqs, batchTokens]) =>
+  ({modelId, name, worker, gpuIndices, tp, pp, context, maxSeqs, batchTokens})
+);
+
+let selectedModelPresentation = "qwen3.6-27b-fp8";
+
+function modelCatalogCardPresentation(model) {
+  const count = modelProfilesPresentation.filter(p => p.modelId === model.id).length;
+  const active = selectedModelPresentation === model.id;
+  return `
+    <button type="button" class="model-catalog-card ${active ? "is-selected" : ""}"
+      data-model-id="${model.id}" aria-pressed="${active ? "true" : "false"}">
+      <span class="model-card-row">
+        <span class="model-card-type">${model.type}</span>
+        <span class="model-card-arrow" aria-hidden="true">↗</span>
+      </span>
+      <strong>${model.name}</strong>
+      <span class="model-card-source">${model.source}</span>
+      <span class="model-card-description">${model.description}</span>
+      <span class="model-card-footer">
+        <span>${model.format}</span>
+        <span>${count} profile${count === 1 ? "" : "s"}</span>
+      </span>
+    </button>`;
+}
+
+function modelProfileNamePresentation(profile) {
+  const ending = profile.name.split("-").pop();
+  if (ending === "balanced") return "Balanced";
+  if (ending === "longctx") return "Long context";
+  if (ending === "throughput") return "Throughput";
+  return "Configured";
+}
+
+function modelProfileDetailsPresentation() {
+  const model = modelCatalogPresentation.find(item => item.id === selectedModelPresentation)
+    || modelCatalogPresentation[1];
+  const matching = modelProfilesPresentation.filter(profile => profile.modelId === model.id);
+  return `
+    <div class="model-profile-panel-header">
+      <div>
+        <span class="model-panel-eyebrow">SELECTED MODEL / CONFIGURED PROFILES</span>
+        <h3>${model.name}</h3>
+        <p>One model artifact can support different serving configurations depending on the worker, GPU placement, and workload.</p>
+      </div>
+      <span class="model-profile-count">${matching.length} profiles</span>
+    </div>
+    <div class="model-profile-table-wrap">
+      <table class="model-profile-table">
+        <thead><tr><th>Profile</th><th>Worker · GPUs</th><th>TP / PP</th><th>Max context</th><th>Max sequences</th></tr></thead>
+        <tbody>${matching.map(p => `
+          <tr>
+            <td><strong>${modelProfileNamePresentation(p)}</strong><span class="model-profile-name">${p.name}</span></td>
+            <td><strong>${p.worker}</strong><span class="model-profile-sub">GPU indexes ${p.gpuIndices}</span></td>
+            <td class="model-mono">${p.tp} / ${p.pp}</td>
+            <td class="model-mono">${p.context}</td>
+            <td class="model-mono">${p.maxSeqs}</td>
+          </tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="model-profile-table-note">Values are <strong>configured limits</strong>, not measured throughput or proven concurrent-request capacity. Profiles that share GPUs or ports are alternative configurations, not assumed to run simultaneously.</div>
+  `;
+}
+
+function modelMarkup() {
+  selectedModelPresentation = "qwen3.6-27b-fp8";
+  return `
+  <section class="models-page enter" aria-labelledby="models-title">
+    <header class="models-hero">
+      <div class="eyebrow"><span class="eyebrow-bar"></span> INFERENCE / 04 — MODELS &amp; PROFILES</div>
+      <h1 id="models-title">One model.<br><span class="accent">Multiple ways to serve it.</span></h1>
+      <p class="models-lead">Securas separates <strong>model artifacts</strong> from <strong>runtime profiles</strong>, so administrators can choose exactly where and how a local LLM runs.</p>
+      <div class="models-hero-pills"><span>04 model entries</span><span>13 defined profiles</span><span>2 GPU workers</span><span>Local inference only</span></div>
+    </header>
+
+    <section class="models-section" aria-labelledby="models-catalog-title">
+      <div class="models-section-heading">
+        <div><span class="models-section-number">01 / MODEL CATALOG</span><h2 id="models-catalog-title">Four models in one central catalog.</h2></div>
+        <p>Select a model to explore its runtime configurations below.</p>
+      </div>
+      <div class="model-catalog-grid">
+        ${modelCatalogPresentation.map(modelCatalogCardPresentation).join("")}
+      </div>
+      <div class="models-catalog-note"><strong>Artifacts:</strong> the stable inventory documents these four model directories on both workers under <code>/srv/models</code>. The catalog keeps their source repositories and pinned revisions; the collector separately verifies what is installed.</div>
+      <div class="models-concepts" aria-label="Model architecture and quantization terms">
+        <div><strong>Dense</strong><p>Most model parameters participate in each token's forward pass.</p></div>
+        <div><strong>MoE</strong><p>A router activates a subset of experts per token rather than every expert.</p></div>
+        <div><strong>FP8</strong><p>Lower-precision weight storage can reduce GPU memory requirements.</p></div>
+      </div>
+    </section>
+
+    <section class="models-section" aria-labelledby="models-distinction-title">
+      <div class="models-section-heading">
+        <div><span class="models-section-number">02 / KEY ARCHITECTURAL IDEA</span><h2 id="models-distinction-title">Model ≠ Profile ≠ Running service.</h2></div>
+        <p>The three concepts are deliberately independent.</p>
+      </div>
+      <div class="models-lifecycle" role="list" aria-label="From model to running inference">
+        <div class="models-lifecycle-card" role="listitem">
+          <span class="models-lifecycle-number">01 / ARTIFACT</span>
+          <h3>Model</h3>
+          <p>Weights, tokenizer, configuration and a pinned source revision.</p>
+          <span class="models-lifecycle-code">/srv/models/&lt;model-name&gt;</span>
+        </div>
+        <span class="models-lifecycle-arrow" aria-hidden="true">→</span>
+        <div class="models-lifecycle-card models-lifecycle-middle" role="listitem">
+          <span class="models-lifecycle-number">02 / DESIRED STATE</span>
+          <h3>Profile</h3>
+          <p>Selected worker, GPUs, TP/PP, context, batching and memory settings.</p>
+          <span class="models-lifecycle-code">PostgreSQL · profiles</span>
+        </div>
+        <span class="models-lifecycle-arrow" aria-hidden="true">→</span>
+        <div class="models-lifecycle-card" role="listitem">
+          <span class="models-lifecycle-number">03 / ACTUAL RUNTIME</span>
+          <h3>Serving</h3>
+          <p>Docker Compose starts vLLM; a healthy backend receives an exact LiteLLM route.</p>
+          <span class="models-lifecycle-code">vLLM + LiteLLM</span>
+        </div>
+      </div>
+      <div class="models-lifecycle-summary"><strong>Why this separation?</strong> We can prepare several alternative serving profiles without copying model weights or automatically starting all their containers.</div>
+    </section>
+
+    <section class="models-section" aria-labelledby="models-profiles-title">
+      <div class="models-section-heading">
+        <div><span class="models-section-number">03 / CONFIGURED SERVING PROFILES</span><h2 id="models-profiles-title">Same weights. Different workloads.</h2></div>
+        <p>Click any model card above to update this table.</p>
+      </div>
+      <div class="model-profile-panel" id="model-profile-panel">${modelProfileDetailsPresentation()}</div>
+    </section>
+
+    <section class="models-section" aria-labelledby="models-placement-title">
+      <div class="models-section-heading">
+        <div><span class="models-section-number">04 / GPU PLACEMENT</span><h2 id="models-placement-title">Two workers, explicit GPU allocation.</h2></div>
+        <p>Examples from the final Qwen3.8 validation profiles.</p>
+      </div>
+      <div class="models-worker-grid">
+        <article class="models-worker-card">
+          <div class="models-worker-heading"><div><span>INFERENCE WORKER 01</span><h3>worker-aero</h3></div><strong>3 × RTX 3090</strong></div>
+          <div class="models-gpu-line">
+            <div class="models-gpu-chip"><span>GPU 0</span><small>Not selected</small></div>
+            <div class="models-gpu-chip is-allocated"><span>GPU 1</span><small>Profile GPU</small></div>
+            <div class="models-gpu-chip is-allocated"><span>GPU 2</span><small>Profile GPU</small></div>
+          </div>
+          <div class="models-placement-detail"><strong>Qwen3.8 27B FP8 — balanced</strong><span>TP 1 / PP 2 · host port 8004 · context 10,000</span></div>
+        </article>
+        <article class="models-worker-card">
+          <div class="models-worker-heading"><div><span>INFERENCE WORKER 02</span><h3>worker-lenovo</h3></div><strong>2 × RTX 3090</strong></div>
+          <div class="models-gpu-line">
+            <div class="models-gpu-chip is-allocated"><span>GPU 0</span><small>Profile GPU</small></div>
+            <div class="models-gpu-chip is-allocated"><span>GPU 1</span><small>Profile GPU</small></div>
+          </div>
+          <div class="models-placement-detail"><strong>Qwen3.8 27B FP8 — balanced</strong><span>TP 1 / PP 2 · host port 8005 · context 10,000</span></div>
+        </article>
+      </div>
+      <div class="models-placement-insight"><strong>TP 1 / PP 2</strong> means one tensor-parallel partition and two pipeline stages: the model's layers are split between two GPUs. This design suits the cluster's multi-GPU configurations connected through PCIe risers.</div>
+    </section>
+
+    <footer class="models-final">
+      <div>
+        <span class="models-section-number">TAKEAWAY</span>
+        <h2>Profiles make local inference <span>repeatable and controllable.</span></h2>
+        <p>The model defines <strong>what</strong> we run. The profile defines <strong>where and how</strong>. vLLM and the gateway provide the serving endpoint.</p>
+      </div>
+      <a class="models-final-link" href="#/vllm">Explore vLLM Runtime <span aria-hidden="true">→</span></a>
+    </footer>
+  </section>`;
+}
+
+function bindModelCatalogPresentation() {
+  const root = appElement.querySelector(".models-page");
+  if (!root) return;
+  root.addEventListener("click", event => {
+    const button = event.target.closest("[data-model-id]");
+    if (!button) return;
+    selectedModelPresentation = button.dataset.modelId;
+    root.querySelectorAll("[data-model-id]").forEach(card => {
+      const active = card.dataset.modelId === selectedModelPresentation;
+      card.classList.toggle("is-selected", active);
+      card.setAttribute("aria-pressed", String(active));
+    });
+    root.querySelector("#model-profile-panel").innerHTML = modelProfileDetailsPresentation();
+  });
+}
+
 function sectionMarkup(layer) {
   return `
     <section class="detail-page enter">
@@ -871,8 +1089,9 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : current.id === "vllm" ? vllmMarkup() : current.id === "results" ? resultsMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "models" ? modelMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : current.id === "vllm" ? vllmMarkup() : current.id === "results" ? resultsMarkup() : sectionMarkup(current)) : overviewMarkup();
   if (current?.id === "ansible") bindAnsibleOperations();
+  if (current?.id === "models") bindModelCatalogPresentation();
   if (current?.id === "hardware") {
     for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {
       const showFallback = () => {
