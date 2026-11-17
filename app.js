@@ -21,9 +21,9 @@ const layers = [
     focus: ["Model inventory", "GPU assignment", "Docker Compose deployments", "Dense vs MoE"], status: "outline"
   },
   {
-    id: "vllm", category: "INFERENCE", label: "05", title: "vLLM runtime", tagline: "Efficient token generation",
-    summary: "The runtime mechanics: prefill, decode, sequence length, KV cache, PagedAttention and scheduling.",
-    focus: ["Context and sequences", "KV cache and PagedAttention", "Prefix caching", "PP / TP trade-offs"], status: "outline"
+    id: "vllm", category: "INFERENCE", label: "05", title: "vLLM runtime", tagline: "From GPU memory to streamed tokens",
+    summary: "Local OpenAI-compatible serving, prefill/decode, KV cache and PagedAttention, context scheduling and hardware-aware profiles.",
+    focus: ["Prefill and decode", "KV cache and PagedAttention", "Context and concurrent sequences", "GPU profiles and PP/TP"], status: "complete"
   },
   {
     id: "master", category: "CONTROL", label: "06", title: "Master & services", tagline: "The control plane",
@@ -871,7 +871,7 @@ function render() {
   const current = index >= 0 ? layers[index] : null;
   const activeId = current ? current.id : "home";
   navElement.innerHTML = navMarkup(activeId);
-  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : current.id === "results" ? resultsMarkup() : sectionMarkup(current)) : overviewMarkup();
+  appElement.innerHTML = current ? (current.id === "context" ? contextMarkup() : current.id === "hardware" ? hardwareMarkup() : current.id === "master" ? masterMarkup() : current.id === "ansible" ? ansibleMarkup() : current.id === "dashboard" ? dashboardMarkup() : current.id === "gateway" ? gatewayMarkup() : current.id === "vllm" ? vllmMarkup() : current.id === "results" ? resultsMarkup() : sectionMarkup(current)) : overviewMarkup();
   if (current?.id === "ansible") bindAnsibleOperations();
   if (current?.id === "hardware") {
     for (const img of appElement.querySelectorAll(".hw-journey .hw-photo img")) {
